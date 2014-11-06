@@ -1,7 +1,10 @@
 #pragma once
 
 #include<cmath>
-#include<point2d.h>
+#include"point2d.h"
+#include<string>
+
+using std::string;
 
 using cg::point_2;
 
@@ -35,8 +38,24 @@ struct Line
 		n = point_2(a/r, b/r);  // normalized normal vector
 	}
 	
-	bool operator<(Line* other)
+
+    bool operator<(const Line &other) const
+    {
+        return atan2(n.y, n.x) < atan2(other.n.y, other.n.x);
+    }
+
+
+
+	string toString()
 	{
-		return atan2(a, b) < atan2(other->a, other->b);
+		string s="<";
+		s+= std::to_string(a);
+		s+= ",";
+		s+= std::to_string(b);
+		s+= ",";
+		s+= std::to_string(c);
+		s+= ">";
+
+		return s;
 	}
 };

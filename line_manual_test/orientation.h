@@ -1,7 +1,6 @@
 #pragma once
 
-#include "cg/primitives/point.h"
-#include "cg/primitives/contour.h"
+#include "point2d.h"
 #include <boost/numeric/interval.hpp>
 #include <gmpxx.h>
 

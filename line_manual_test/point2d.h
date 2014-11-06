@@ -1,6 +1,6 @@
 #pragma once
 
-#include "vector.h"
+#include <vector>
 
 namespace cg
 {
@@ -31,12 +31,6 @@ namespace cg
          , y(0)
       {}
 
-      point_2t<Scalar> & operator += (vector_2t<Scalar> const & delta)
-      {
-         x += delta.x;
-         y += delta.y;
-         return *this;
-      }
    };
 
    template <class Scalar>
@@ -79,19 +73,4 @@ namespace cg
       return !(a == b);
    }
 
-   // в этом месте возможно переполнение!
-   template <class Scalar>
-   vector_2t<Scalar> const operator - (point_2t<Scalar> const & a, point_2t<Scalar> const & b)
-   {
-      return vector_2t<Scalar>(a.x - b.x, a.y - b.y);
-   }
-
-   // в этом месте возможно переполнение!
-   template <class Scalar>
-   point_2t<Scalar> const operator + (point_2t<Scalar> const & pt, vector_2t<Scalar> const & delta)
-   {
-      point_2t<Scalar> res(pt);
-      res += delta;
-      return res;
-   }
 }

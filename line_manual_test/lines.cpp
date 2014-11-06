@@ -8,18 +8,18 @@ using cg::leftTurn;
 
 vector<Line> lines;
 
-int getNearest(Line* l)
+int getNearest(Line l)
 {
 	for(int i=0; i<lines.size()-1; ++i)
 	{
-		if(leftTurn(lines[i]->n, l ,lines[i+1]->n))
+        if(leftTurn(lines[i].n, l.n ,lines[i+1].n))
 		{
 			return i;
 		}
 	}
-	if(leftTurn(l, lines[i]->n, lines[i+1]->n))
+    if(l<lines[0])
 		return -1;
-	else if(leftTurn(lines[i]->n ,lines[i+1]->n), l)
+    else if(lines.back()<l)
 		return lines.size()-1;
 	
 	return -2; // PANIC!!! unreachable;
@@ -33,12 +33,15 @@ int main()
 	double a,b,c;
 	while(n)
 	{
+        --n;
 		cin>>a>>b>>c;
-		Line* l = new Line(a,b,c);
+        Line l = Line(a,b,c);
 		
-		if(lines.size < 2)
+		if(lines.size() < 2)
 		{
 			cout<<"line added"<<endl;
+            lines.push_back(l);
+            sort(lines.begin(), lines.end());
 			continue;
 		}
 		int pos = getNearest(l);
@@ -50,14 +53,22 @@ int main()
 		}
 		
 		if(pos == -1)
-			cout<<"the smallest poler angle. needs to be first";
+            cout<<"the smallest poler angle. needs to be first"<<endl;
 		else if(pos == lines.size()-1)
-			cout<<"the biggest poler angle. needs to be the last";
+            cout<<"the biggest poler angle. needs to be the last"<<endl;
 		else
-			cout<<"between"<<lines[i]<<" and "<<lines[i+1];
+            cout<<"between"<<lines[pos].toString()<<" and "<<lines[pos+1].toString()<<endl;
 		
-		lines.push_back(l);
+        lines.push_back(l);
 		sort(lines.begin(), lines.end());
+
+        cout<<"==========================="<<endl;
+        for(int i=0; i<lines.size(); ++i)
+        {
+            cout<<lines[i].toString()<<endl;
+        }
+        cout<<"==========================="<<endl;
+
 	}
 	
 	return 0;
