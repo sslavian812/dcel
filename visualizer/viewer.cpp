@@ -98,12 +98,13 @@ struct sample_viewer : cg::visualization::viewer_adapter
       first_.reset();
       second_.reset();
 
-      if(lines_.size() > 2)
+      if(lines_.size() >= 2)
       {
-          if(getNearest(l).first > 0)
-            first_ = lines_[getNearest(l).first];
-          if(getNearest(l).second >0)
-              second_= lines_[getNearest(l).second];
+          pair<int, int> p = getNearest(l);
+          if(p.first >= 0)
+            first_ = lines_[p.first];
+          if(p.second >= 0)
+              second_= lines_[p.second];
       }
 
       lines_.push_back(l);
