@@ -131,13 +131,13 @@ struct sample_viewer : cg::visualization::viewer_adapter
 //      first_.reset();
 //      second_.reset();
 
-      if(lines_.size() >= 2)
-      {
-          current_line_.reset();
-          current_point_.reset();
-          normal_point_.reset();
-          return false;
-      }
+//      if(lines_.size() >= 2)
+//      {
+//          current_line_.reset();
+//          current_point_.reset();
+//          normal_point_.reset();
+//          return false;
+//      }
 
       lines_.push_back(l);
       //sort(lines_.begin(), lines_.end());

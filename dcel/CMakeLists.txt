@@ -32,6 +32,8 @@ vertex.h
 edge.h
 face.h
 orientation.h
+orientation3d.h
+line_wrapper.h
 )
 
 SET(SOURCES viewer.cpp)

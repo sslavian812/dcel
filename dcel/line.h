@@ -81,6 +81,17 @@ struct Line
         return atan2(n.y, n.x) < atan2(other.n.y, other.n.x);
     }
 
+    bool operator>(const Line &other) const
+    {
+        return other.operator <(*this);
+    }
+
+    bool operator==(const Line &other) const
+    {
+        return (!(*this<other)) && (!(other<*this));
+    }
+
+
     point_2 intersect(Line other)
     {
         double a2 = other.a;
