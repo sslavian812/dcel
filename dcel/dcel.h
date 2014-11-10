@@ -88,12 +88,18 @@ struct Dcel
     bool intersects(int edge, int line)
     {
         Line l = lines[line];
+
+        if(edges[edge].origin == 0 || edges[edges[edge].twin].origin == 0)
+            return false; // how to check this case???
+        // TODO: how to get "maximal" point?
+
         Vertex v1 = vertices[edges[edge].origin];
         Vertex v2 = vertices[edges[edges[edge].twin].origin];
+
         Line l11 = lines[v1.line1];
         Line l12 = lines[v1.line2];
-        Line l21 = lines[v1.line1];
-        Line l22 = lines[v1.line2];
+        Line l21 = lines[v2.line1];
+        Line l22 = lines[v2.line2];
 
         if( opposite(orientation(Point3d(l), Point3d(l11), Point3d(l12)),
                     orientation(Point3d(l), Point3d(l21), Point3d(l22))) )
@@ -257,7 +263,7 @@ struct Dcel
             edges[ne1].twin = ne3;
             edges[ne3].twin = ne1;
             edges[ne2].twin = ne4;
-            edges[ne4].twin = ne3;
+            edges[ne4].twin = ne2;
 
             edges[e1].next = ne1;
             edges[ne1].prev = e1;
