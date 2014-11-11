@@ -15,7 +15,7 @@ struct Edge
 
     int line; //Line
 
-    Edge(int origin, int line): origin(origin), line(line)
+    Edge(int origin, int line): origin(origin), incidentFace(-1), line(line)
     {}
 };
 

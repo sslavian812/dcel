@@ -33,7 +33,7 @@ struct Line
         n = point_2(a/r, b/r);  // normalized normal vector
     }
 	
-	Line(double a, double b, double c)
+    Line(double a, double b, double c, double d = 1)
 	{
 		// b > 0
 		// b == 0 -> a>0
@@ -49,14 +49,20 @@ struct Line
 			b = -b; a = -a; c = -c;
 		}
 		
-		this->a=a;
-		this->b=b;
-		this->c=c;
+        this->a=a*d;
+        this->b=b*d;
+        this->c=c*d;
 		
 		double r = sqrt(a*a+b*b);
 		
 		n = point_2(a/r, b/r);  // normalized normal vector
     }
+
+    point_2 getDirection()
+    {
+        return point_2(-n.y, n.x);
+    }
+
 
     std::pair<point_2f, point_2f> getSegment()
     {
@@ -100,6 +106,11 @@ struct Line
         double x = -(c*b2-c2*b)/(a*b2-a2*b);
         double y = -(a*c2-a2*c)/(a*b2-a2*b);
         return point_2(x,y);
+    }
+
+    double substitute(point_2 point)
+    {
+        return a*point.x + b*point.y + c;
     }
 
 
