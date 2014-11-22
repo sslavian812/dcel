@@ -44,6 +44,7 @@ struct Dcel
         return res;
     }
 
+
     vector<int> subdivide(int e1, int e2, int l)
     {
         // returns [e1,e2,e3,e4,v]
@@ -83,178 +84,129 @@ struct Dcel
         return res;
     }
 
-    //TODO: не всегда работает правильно.
-    // проверка плохая.
-    // нужно как-то понять, куда направлено ребро,
-    // и правильно проассоциировать прямую. тогда будет работать
-    bool intersects(int edge, int line)
+    void subdivide(int e1, int e2, int l, int &e3, int &e4, int &v)
     {
-        Line l = lines[line];
-        Line edge_line = lines[edges[edge].line];
+        vector<int> div = subdivide(e1, e2, l);
+        e3=div[2];
+        e4=div[3];
+        v = div[4];
+    }
+
+    bool intersects(int edge, int l)
+    {
+        // determines, does the line intersect the edge or not.
 
         if(edges[edge].origin == 0)
         {
-            Vertex v = vertices[edges[edges[edge].twin].origin];
-            point_2 p = l.intersect(edge_line);
-            p.x += l.getDirection().x;
-            p.y += l.getDirection().y;
-            if((l.substitute(v.getPoint())) * (l.substitute(p)) > 0)
-                return true;
-            else
-                return false;
+            return intersects(edges[edge].twin, l);
         }
 
-        if(edges[edges[edge].twin].origin == 0)
-        {
-            Vertex v = vertices[edges[edge].origin];
-            point_2 p = l.intersect(edge_line);
-            p.x += l.getDirection().x;
-            p.y += l.getDirection().y;
-            if((l.substitute(v.getPoint())) * (l.substitute(p)) > 0)
-                return false;
-            else
-                return true;
-        }
+        // origin != 0 now.
 
+        Line line = lines[l];
+        Line edge_line = lines[edges[edge].line];
 
-        Vertex v1 = vertices[edges[edge].origin];
-        Vertex v2 = vertices[edges[edges[edge].twin].origin];
-
-        Line l11 = lines[v1.line1];
-        Line l12 = lines[v1.line2];
-        Line l21 = lines[v2.line1];
-        Line l22 = lines[v2.line2];
-
-        if( opposite(orientation(Point3d(l), Point3d(l11), Point3d(l12)),
-                    orientation(Point3d(l), Point3d(l21), Point3d(l22))) )
-            return true;
-        else
-            return false;
+        return cg::orientation(point_2(0.0,0.0), edge_line.n, line.n) == cg::CG_RIGHT;
     }
 
     int getNearest(int l)
     {
-        // traverse all the edges incidet v0 and choose the nearest
-        // we should take the blue one! with a little bigger polar angle
+        /* итерируюсь по ребрам (читай ориентированным прямым)
+         * выходящим из бесконечной точки. Ищу такое ребро, что
+         * векторное произведение нашей прямой на него - вектор вглубь,
+         * а векторное произведение нашей прямой на следующий вектор - вектор на нас.
+         * С одного из этих векторов и можно смело начинать*/
 
-        // less, less, greater, greater
-        vector<int> less;
-        vector<int> greater;
 
         int cur_edge = vertices[0].incidentEdge;
         int start_edge = cur_edge;
-        do
+        int next_edge = edges[edges[cur_edge].twin].next;
+
+        Line line = lines[l];
+        const point_2 Z(0.0,0.0);
+
+        while(next_edge != start_edge)
         {
-            if(intersects(cur_edge, l))
+            if(cg::orientation(Z, line.getDirection(), lines[edges[cur_edge].line].getDirection())  == cg::CG_RIGHT &&
+                               cg::orientation(Z, line.getDirection(), lines[edges[next_edge].line].getDirection()) == cg::CG_LEFT)
             {
-                return cur_edge;
+                return next_edge;
             }
 
-            if(lines[edges[cur_edge].line] < lines[l])
-            {
-                if(less.size() == 0)
-                    less.push_back(cur_edge);
-                else if(less.size() >= 1)
-                {
-                    if(lines[edges[cur_edge].line] == lines[edges[less.front()].line])
-                        less.push_back(cur_edge);
-                    else if(lines[edges[cur_edge].line] > lines[edges[less.front()].line])
-                        less[0] = cur_edge;
-                }
-                else if(less.size() == 2)
-                    if(lines[edges[cur_edge].line] > lines[edges[less.back()].line])
-                        less[1] = cur_edge;
-            }
-
-            if(lines[edges[cur_edge].line] > lines[l])
-            {
-                if(greater.size() == 0)
-                    greater.push_back(cur_edge);
-                else if(greater.size() >= 1)
-                {
-                    if(lines[edges[cur_edge].line] == lines[edges[greater.front()].line])
-                        greater.push_back(cur_edge);
-                    else if(lines[edges[cur_edge].line] < lines[edges[greater.front()].line])
-                        greater[0] = cur_edge;
-                }
-                else if(greater.size() == 2)
-                    if(lines[edges[cur_edge].line] < lines[edges[greater.back()].line])
-                        greater[1] = cur_edge;
-            }
-
-
-            cur_edge = edges[edges[cur_edge].twin].next;
-        }while(start_edge != cur_edge);
-
-        for(int i=0; i<greater.size(); ++i)
-        {
-            int cur = greater[i];
-            do
-            {
-                if(intersects(cur, l))
-                {
-                    return greater[i];
-                    break;
-                }
-                cur = edges[cur].next;
-            } while(cur != greater[i]);
+            cur_edge = next_edge;
+            next_edge = edges[edges[cur_edge].twin].next;
         }
 
-        for(int i=0; i<less.size(); ++i)
+        if(cg::orientation(Z, line.getDirection(), lines[edges[cur_edge].line].getDirection())  == cg::CG_RIGHT &&
+                           cg::orientation(Z, line.getDirection(), lines[edges[next_edge].line].getDirection()) == cg::CG_LEFT)
         {
-            int cur = less[i];
-            do
-            {
-                if(intersects(cur, l))
-                {
-                    return less[i];
-                    break;
-                }
-                cur = edges[cur].next;
-            } while(cur != less[i]);
+            return next_edge;
         }
 
-        return -1; // unreachable. but it isn't prooved yet. hope so.
-                    // if reachable - cases segfault;
+        return -1; // unreachable.
     }
 
 
+/*    // deprecated
+//    void link_right(int e1, int e2, int begin, int end)
+//    {
+//        edges[e1].origin = edges[begin].origin;
+//        edges[begin].prev = e2;
+//        edges[e2].next = begin;
+//        edges[e1].prev = end;
+//        edges[end].next = e1;
+//    }
 
-    void link_right(int e1, int e2, int begin, int end)
+//    //deprecated
+//    void link_left(int e1, int e2, vector<int> &div)
+//    {
+//        edges[e2].origin = div[4];
+//        edges[div[0]].next = e2;
+//        edges[e2].prev = div[0];
+//        edges[div[2]].prev = e1;
+//        edges[e1].next = div[2];
+//    }
+
+//    //deprecated
+//    void link_left(int e1, int e2, int ne1, int ne3, int v)
+//    {
+//        edges[e2].origin = v;
+
+//        edges[ne1].next = e2;
+//        edges[e2].prev = ne1;
+//        edges[ne3].prev = e1;
+//        edges[e1].next = ne3;
+//    }
+*/
+
+
+    void link_forward(int e1, int e2, int prev, int next, int v)
     {
-        edges[e1].origin = edges[begin].origin;
-        edges[begin].prev = e2;
-        edges[e2].next = begin;
-        edges[e1].prev = end;
-        edges[end].next = e1;
-    }
-
-
-    void link_left(int e1, int e2, vector<int> &div)
-    {
-        edges[e2].origin = div[4];
-        edges[div[0]].next = e2;
-        edges[e2].prev = div[0];
-        edges[div[2]].prev = e1;
-        edges[e1].next = div[2];
-    }
-
-    void link_left(int e1, int e2, int ne1, int ne3, int v)
-    {
+        // links "left" side of e1|e2 between prev-next edges
         edges[e2].origin = v;
 
-        edges[ne1].next = e2;
-        edges[e2].prev = ne1;
-        edges[ne3].prev = e1;
-        edges[e1].next = ne3;
+        edges[prev].next = e2;
+        edges[e2].prev = prev;
+        edges[next].prev = e1;
+        edges[e1].next = next;
+
+        edges[e1].incidentFace = edges[next].incidentFace;
+        edges[e2].incidentFace = edges[prev].incidentFace;
+    }
+
+
+    void link_backward(int e1, int e2, int prev, int next, int v)
+    {
+        // links "right" side of e1|e2 between prev-next edges
+        link_forward(e2, e1, next, prev, v); // enough to swap e1 and e2, according to images!!
     }
 
     bool addLine(double a, double b, double c)
     {
         int l1 = lines.size();
-        lines.push_back(Line(a,b,c));
+        lines.push_back(Line(a, b, c));
         int l2 = lines.size();
-        lines.push_back(Line(a,b,c, -1));
+        lines.push_back(Line(-a,-b,-c));
 
         if(faces.size() == 1)
         {
@@ -281,59 +233,68 @@ struct Dcel
         }
         else if(faces.size() == 2)
         {
+            /*
+             * векторное произведение нашей прямой на него - вектор вглубь,
+             * а векторное произведение нашей прямой на следующий вектор - вектор на нас.
+            */
             int e1 = 0;
             int e2 = 1;
-            vector<int> div = subdivide(e1, e2, l1);
-            int e3=div[2];
-            int e4=div[3];
-            int v = div[4];
+            int e3, e4, v;
 
+            const point_2 Z(0.0, 0.0);
 
-            int ne1 = edges.size();
-            edges.push_back(Edge(v, l1));
-            int ne2 = edges.size();
-            edges.push_back(Edge(v, l2));
-            int ne3 = edges.size();
-            edges.push_back(Edge(0, l2));
-            int ne4 = edges.size();
+            if(cg::orientation(Z, lines[l1].getDirection(), lines[edges[e1].line].getDirection()) == cg::CG_RIGHT)
+            {
+                std::swap(e1,e2);
+            }
+
+            subdivide(e1, e2, l1, e3, e4, v);
+
+            int new_e1 = edges.size();
             edges.push_back(Edge(0, l1));
+            int new_e2 = edges.size();
+            edges.push_back(Edge(v, l2));
 
-            edges[ne1].twin = ne3;
-            edges[ne3].twin = ne1;
-            edges[ne2].twin = ne4;
-            edges[ne4].twin = ne2;
+            edges[new_e1].twin = new_e2;
+            edges[new_e2].twin = new_e1;
 
-            edges[e1].next = ne1;
-            edges[ne1].prev = e1;
-            edges[e2].next = ne2;
-            edges[ne2].prev = e2;
+            link_forward(new_e1, new_e2, e1, e3, v);
 
-            edges[ne3].next = e3;
-            edges[e3].prev = ne3;
-            edges[ne4].next = e4;
-            edges[e4].prev = ne4;
+            edges[new_e2].next = e1;
+            edges[e1].prev = new_e2;
+            edges[e3].next = new_e1;
+            edges[new_e1].prev = e3;
+            // closure
 
-            edges[e3].next = ne3;
-            edges[ne3].prev = e3;
-            edges[e4].next = ne4;
-            edges[ne4].prev = e4;
 
-            edges[ne2].next = e2;
-            edges[e2].prev = ne2;
-            edges[ne1].next = e1;
-            edges[e1].prev = ne1;
+            new_e1 = edges.size();
+            edges.push_back(Edge(v, l1));
+            new_e2 = edges.size();
+            edges.push_back(Edge(0, l2));
 
-            edges[ne1].incidentFace = edges[e1].incidentFace;
-            edges[ne2].incidentFace = edges[e2].incidentFace;
-            edges[ne3].incidentFace = edges[e3].incidentFace;
-            edges[ne4].incidentFace = edges[e4].incidentFace;
+            edges[new_e1].twin = new_e2;
+            edges[new_e2].twin = new_e1;
+
+            link_backward(new_e1, new_e2, e4, e2, v);
+
+            edges[e4].next = new_e2;
+            edges[new_e2].prev = e4;
+            edges[new_e1].next = e2;
+            edges[e2].prev = new_e1;
+            //closure
+            return true;
         }
         else
         {
             int begin, end, in;
+            int start_vertex = 0;
 
             begin = getNearest(l1);
             end = edges[begin].prev;
+
+            if(edges[begin].origin != 0)
+                std::swap(begin, end);
+
             int cur = begin;
             do
             {
@@ -348,42 +309,46 @@ struct Dcel
             if(in == begin || in == end)
             {
                 // undesired case; needs sone addition code
-                // TODO: every third edge is in here!!
 
-                int e1 = edges.size();
-                edges.push_back(Edge(0, l1));
-                int e2 = edges.size();
+                int new_e1 = edges.size();
+                edges.push_back(Edge(start_vertex, l1));
+                int new_e2 = edges.size();
                 edges.push_back(Edge(-1, l2));
+                edges[new_e1].twin = new_e2;
+                edges[new_e2].twin = new_e1;
 
-                vector<int> div = subdivide(in, edges[in].twin, l1); // почему-то косячат фейсы
-                link_left(e1, e2, div[0], div[2], div[4]);
+                int e1=in, e2 = edges[in].twin, e3,e4,v;
+                subdivide(e1, e2, l1, e3, e4, v);
+
+                link_forward(new_e1, new_e2, e1, e3, v);
 
                 if(in == end)
                 {
-                    edges[e2].next = begin;
-                    edges[begin].prev = e2;
-                    edges[div[2]].next = e1;
-                    edges[e1].prev = div[2];
+                    edges[new_e2].next = begin;
+                    edges[begin].prev = new_e2;
+                    edges[e3].next = new_e1;
+                    edges[new_e1].prev = e3;
                 }
                 if(in == begin)
                 {
-                    edges[e2].next = begin;
-                    edges[begin].prev = e2;
-                    edges[end].next = e1;
-                    edges[e1].prev = end;
+                    edges[new_e2].next = begin;
+                    edges[begin].prev = new_e2;
+                    edges[end].next = new_e1;
+                    edges[new_e1].prev = end;
                 }
 
-                begin = div[3];
-                end = div[1];
+                begin = e4;
+                end = e2;
+                start_vertex = v;
             }
 //            else
 //            {// best case: begin, ..., in, ...end;}
 
 
-            while(true)
+            while(in == in)
             {
                 in = -1;
-                int cur = begin;
+                int cur = edges[begin].next;
                 do
                 {
                     if(intersects(cur, l1))
@@ -392,29 +357,53 @@ struct Dcel
                         break;
                     }
                     cur = edges[cur].next;
-                } while(cur != begin);
+                } while(cur != end);
 
                 if(in == -1)
                     break;
 
-                int e1 = edges.size();
-                edges.push_back(Edge(0, l1));
-                int e2 = edges.size();
+                int new_e1 = edges.size();
+                edges.push_back(Edge(start_vertex, l1));
+                int new_e2 = edges.size();
                 edges.push_back(Edge(-1, l2));
+                edges[new_e1].twin = new_e2;
+                edges[new_e2].twin = new_e1;
 
-                link_right(e1, e2, begin, end);
-                // remember: e2.origin is still unknown
-                // remember: new faces are correctly created
 
-                vector<int> div = subdivide(in, edges[in].twin, l1);
-                link_left(e1, e2, div);
+                link_backward(new_e1, new_e2, begin, end, start_vertex);
 
-                begin = div[3];
-                end = div[1];
+                int e1 = in, e2=edges[in].twin, e3, e4, v;
+                subdivide(e1,e2, l1, e3,e4,v);
+                link_forward(new_e1, new_e2, e1, e3, v);
+
+                begin = e4;
+                end = e2;
+                start_vertex = v;
             }
 
-            //TODO: проверить, корректно ли привязались крайние концы и консистентный ли dcel.
 
+            int new_e1 = edges.size();
+            edges.push_back(Edge(start_vertex, l1));
+            int new_e2 = edges.size();
+            edges.push_back(Edge(0, l2));
+
+            edges[new_e1].twin = new_e2;
+            edges[new_e2].twin = new_e1;
+
+            link_backward(new_e1, new_e2, begin, end, start_vertex);
+
+
+            cur = begin;
+            while(edges[cur].origin != 0)
+                cur = edges[cur].next;
+            int prev_cur = edges[cur].prev;
+
+            edges[new_e1].next = cur;
+            edges[cur].prev = new_e1;
+
+            edges[prev_cur].next = new_e2;
+            edges[new_e2].prev = prev_cur;
+            return true;
         }
 
         return false; // !!!! impossible

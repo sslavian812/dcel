@@ -19,23 +19,6 @@ using std::pair;
 struct sample_viewer : cg::visualization::viewer_adapter
 {
 
-//    pair<int,int> getNearest(Line l)
-//    {
-//        for(int i=0; i<lines_.size()-1; ++i)
-//        {
-//            if(leftTurn(lines_[i].n, l.n ,lines_[i+1].n))
-//            {
-//                return std::make_pair(i, i+1);
-//            }
-//        }
-//        if(l<lines_[0])
-//            return std::make_pair(-1, 0);
-//        else if(lines_.back()<l)
-//            return std::make_pair(lines_.size()-1, -1);
-
-//        return std::make_pair(-2,-2); // PANIC!!! unreachable;
-//    }
-
    void drawFace(cg::visualization::drawer_type & drawer, int face) const
    {
        if(dcel_.faces.size()==1)
@@ -83,20 +66,6 @@ struct sample_viewer : cg::visualization::viewer_adapter
         drawer.set_color(Qt::green);
         drawer.draw_line(cur.getSegment().first, cur.getSegment().second);
       }
-
-//      if(first_)
-//      {
-//          Line l = first_.get();
-//          drawer.set_color(Qt::red);
-//          drawer.draw_line(l.getSegment().first, l.getSegment().second, 5);
-
-//      }
-//      if(second_)
-//      {
-//          Line r = second_.get();
-//          drawer.set_color(Qt::blue);
-//          drawer.draw_line(r.getSegment().first, r.getSegment().second, 5);
-//      }
    }
 
    void print(cg::visualization::printer_type & p) const
@@ -114,33 +83,22 @@ struct sample_viewer : cg::visualization::viewer_adapter
 
       current_point_ = p;
       return true;
-
-     // first_.reset();
-     // second_.reset();
    }
 
    bool on_release(const point_2f & p)
    {
       if (!current_point_)
          return false;
+
       if (!normal_point_)
          return false;
 
-      Line l(current_point_.get(), normal_point_.get() - current_point_.get()); // Line(point_2f, vector_2f);
-
-//      first_.reset();
-//      second_.reset();
-
-//      if(lines_.size() >= 2)
-//      {
-//          current_line_.reset();
-//          current_point_.reset();
-//          normal_point_.reset();
-//          return false;
-//      }
+      Line l(current_point_.get(), normal_point_.get()-current_point_.get()); // Line(point_2f, vector_2f);
 
       lines_.push_back(l);
       //sort(lines_.begin(), lines_.end());
+
+      current_line_.reset();
 
       dcel_.addLine(l.a, l.b, l.c);
 
@@ -156,7 +114,7 @@ struct sample_viewer : cg::visualization::viewer_adapter
        if (!current_point_)
           return false;
 
-       if(!normal_point_ || normal_point_.get() != current_point_.get())
+       if(p != current_point_.get())
            normal_point_ = p;
        else
            return false;
