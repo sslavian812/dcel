@@ -1,0 +1,30 @@
+cmake_minimum_required(VERSION 2.8)
+
+set(PROJECT tests)
+project(${PROJECT})
+
+if(CMAKE_C_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
+else()
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
+endif()
+
+
+
+
+find_package(Boost COMPONENTS random REQUIRED)
+include_directories(${Boost_INCLUDE_DIRS})
+
+link_directories(${Boost_LIBRARYDIR})
+
+find_package(GTest REQUIRED)
+include_directories(${GTEST_INCLUDE_DIR})
+
+
+set(SOURCES test.cpp)
+
+add_executable(${PROJECT} ${SOURCES})
+target_link_libraries(${PROJECT} ${GTEST_LIBRARIES} ${GTEST_BOTH_LIBRARIES} pthread)
+
+#file(GLOB_RECURSE HEADERS "*.h")
+#add_custom_target(${PROJECT} SOURCES ${HEADERS})

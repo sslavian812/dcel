@@ -208,7 +208,7 @@ struct Dcel
     }
 
 
-    void link_forward(int e1, int e2, int prev, int next, int v)
+    void linkForward(int e1, int e2, int prev, int next, int v)
     {
         // links "left" side of e1|e2 between prev-next edges
         edges[e2].origin = v;
@@ -223,23 +223,31 @@ struct Dcel
     }
 
 
-    void link_backward(int e1, int e2, int prev, int next, int v)
+    void linkBackward(int e1, int e2, int prev, int next, int v)
     {
         // links "right" side of e1|e2 between prev-next edges
-        link_forward(e2, e1, next, prev, v); // enough to swap e1 and e2, according to images!!
+        linkForward(e2, e1, next, prev, v); // enough to swap e1 and e2, according to images!!
     }
 
 
-    void updateFace(int edge)
+    void updateFace(int edge, int twin)
     {
-        int face = edges[edge].incidentFace;
+        int new_face = edges[edge].incidentFace;
         int cur_edge = edges[edge].next;
+        int curface;
 
         while(cur_edge != edge)
         {
-            edges[cur_edge].incidentFace = face;
+            curface = edges[cur_edge].incidentFace;
+            if(faces[curface].startEdge == cur_edge && curface != new_face)
+            {
+               faces[curface].startEdge = twin;
+            }
+            edges[cur_edge].incidentFace = new_face;
             cur_edge = edges[cur_edge].next;
         }
+
+        //traverseFace(*this, edges[edge].incidentFace);
     }
 
 
@@ -302,7 +310,7 @@ struct Dcel
             edges[new_e1].twin = new_e2;
             edges[new_e2].twin = new_e1;
 
-            link_forward(new_e1, new_e2, e1, e3, v);
+            linkForward(new_e1, new_e2, e1, e3, v);
 
             edges[new_e2].next = e1;
             edges[e1].prev = new_e2;
@@ -319,7 +327,7 @@ struct Dcel
             edges[new_e1].twin = new_e2;
             edges[new_e2].twin = new_e1;
 
-            link_backward(new_e1, new_e2, e4, e2, v);
+            linkBackward(new_e1, new_e2, e4, e2, v);
 
             edges[e4].next = new_e2;
             edges[new_e2].prev = e4;
@@ -365,14 +373,9 @@ struct Dcel
             {
                 int e1=in, e2 = edges[in].twin, e3,e4,v;
 
-//                int e1_victim = edges[e1].next;
-//                int e2_victim = edges[e2].next;
                 subdivide(e1, e2, l1, e3, e4, v);
 
-//                edges[e1_victim].prev = e3;
-//                edges[e2_victim].prev = e4;
-
-                link_forward(new_e1, new_e2, e1, e3, v);
+                linkForward(new_e1, new_e2, e1, e3, v);
 
                 if(in == end)
                 {
@@ -389,8 +392,8 @@ struct Dcel
                     edges[new_e1].prev = end;
                 }
 
-                updateFace(e1);
-                updateFace(e3);
+                updateFace(new_e1, new_e2);
+                updateFace(new_e2, new_e1);
 
                 begin = e4;
                 end = e2;
@@ -400,14 +403,14 @@ struct Dcel
             {
                 // case: begin, ..., in, ...end;
 
-                link_backward(new_e1, new_e2, begin, end, start_vertex);
+                linkBackward(new_e1, new_e2, begin, end, start_vertex);
 
                 int e1 = in, e2=edges[in].twin, e3, e4, v;
                 subdivide(e1,e2, l1, e3,e4,v);
-                link_forward(new_e1, new_e2, e1, e3, v);
+                linkForward(new_e1, new_e2, e1, e3, v);
 
-                updateFace(e1);
-                updateFace(e3);
+                updateFace(new_e1, new_e2);
+                updateFace(new_e2, new_e1);
 
                 begin = e4;
                 end = e2;
@@ -440,16 +443,16 @@ struct Dcel
                 edges[new_e2].twin = new_e1;
 
 
-                link_backward(new_e1, new_e2, begin, end, start_vertex);
+                linkBackward(new_e1, new_e2, begin, end, start_vertex);
 
                 int e1 = in, e2=edges[in].twin, e3, e4, v;
                 halfSubdivide(e1, e2, l1, e3, e4, v, edges[begin].incidentFace, edges[end].incidentFace);
-                link_forward(new_e1, new_e2, e1, e3, v);
+                linkForward(new_e1, new_e2, e1, e3, v);
 
                 //TODO: check wether e1 e3 needed
 
-                updateFace(e1);
-                updateFace(e3);
+                updateFace(new_e1, new_e2);
+                updateFace(new_e2, new_e1);
 
                 begin = e4;
                 end = e2;
@@ -465,7 +468,7 @@ struct Dcel
             edges[new_e1].twin = new_e2;
             edges[new_e2].twin = new_e1;
 
-            link_backward(new_e1, new_e2, begin, end, start_vertex);
+            linkBackward(new_e1, new_e2, begin, end, start_vertex);
 
 
             cur = begin;
@@ -479,12 +482,10 @@ struct Dcel
             edges[prev_cur].next = new_e2;
             edges[new_e2].prev = prev_cur;
 
-            updateFace(begin);
-            updateFace(end);
+            updateFace(new_e1, new_e2);
+            updateFace(new_e2, new_e1);
 
             checkConsistensy(*this);
-
-            //return Checker.checkConsistensy(*this);
             return true;
         }
 
@@ -533,9 +534,17 @@ struct Dcel
                 std::cerr<<"face "<<f<<"has more than "<<max<<"edges "<<std::endl;
                 return false;
             }
+
+            if(d.edges[next_edge].prev != cur_edge)
+            {
+                std::cerr<<"edge "<<next_edge<<" has incorrect prev pointer "<<d.edges[next_edge].prev<<" instead of "<<cur_edge<<std::endl;
+                return false;
+            }
             cur_edge = next_edge;
             ++k;
         }
+        if(!res)
+            std::cerr<<"ended checking face "<<f<<": "<<std::endl<<std::endl;
         return res;
     }
 
@@ -550,6 +559,10 @@ struct Dcel
                 res = false;
             }
         }
+        if(res)
+            std::cerr<<"dcel is CORRECT!"<<std::endl;
+        else
+            std::cerr<<"dcel is INCORRECT!"<<std::endl;
         return res;
     }
 };

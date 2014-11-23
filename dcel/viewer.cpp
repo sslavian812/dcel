@@ -74,8 +74,8 @@ struct sample_viewer : cg::visualization::viewer_adapter
       p.corner_stream() << "press lbutton to fix a point on line" << cg::visualization::endl
                         << "move mouse to specify line's normal vector" << cg::visualization::endl
                         << "lines count: " <<lines_.size() << cg::visualization::endl;
-      if(!correct_)
-          p.corner_stream()<<"NOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO"<<cg::visualization::endl;
+//      if(!correct_)
+//          p.corner_stream()<<"NOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO"<<cg::visualization::endl;
    }
 
 

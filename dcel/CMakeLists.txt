@@ -9,9 +9,9 @@ set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/CMake/Modules)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 if(CMAKE_C_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
 else()
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
 endif()
 
 find_package(OpenGL REQUIRED)
@@ -25,7 +25,7 @@ include_directories(3rdparty/include )
 
 add_subdirectory(3rdparty)
 
-SET(HEADERS 
+SET(HEADERS
 line.h
 dcel.h
 vertex.h
@@ -34,7 +34,6 @@ face.h
 orientation.h
 orientation3d.h
 line_wrapper.h
-checker.h
 )
 
 SET(SOURCES viewer.cpp)
