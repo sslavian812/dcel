@@ -13,6 +13,7 @@
 #include "dcel.h"
 
 
+
 using cg::point_2f;
 using std::pair;
 
@@ -27,7 +28,7 @@ struct sample_viewer : cg::visualization::viewer_adapter
        {
             int e1=0;
 
-            drawer.set_color(Qt::yellow);
+            drawer.set_color(Qt::blue);
             pair<point_2, point_2> edge = dcel_.getEdge(e1);
             drawer.draw_line(edge.first, edge.second);
             drawer.set_color(Qt::red);
@@ -41,7 +42,7 @@ struct sample_viewer : cg::visualization::viewer_adapter
        pair<point_2, point_2> edge;
        do
        {
-           pair<point_2, point_2> edge = dcel_.getEdge(cur_edge);
+           edge = dcel_.getEdge(cur_edge);
 
            drawer.set_color(Qt::blue);
            drawer.draw_line(edge.first, edge.second);
@@ -73,6 +74,8 @@ struct sample_viewer : cg::visualization::viewer_adapter
       p.corner_stream() << "press lbutton to fix a point on line" << cg::visualization::endl
                         << "move mouse to specify line's normal vector" << cg::visualization::endl
                         << "lines count: " <<lines_.size() << cg::visualization::endl;
+      if(!correct_)
+          p.corner_stream()<<"NOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO"<<cg::visualization::endl;
    }
 
 
@@ -129,6 +132,7 @@ private:
    boost::optional<point_2f> current_point_;
    boost::optional<point_2f> normal_point_;
    boost::optional<Line> current_line_;
+   bool correct_ = true;
    //boost::optional<Line> first_;
    //boost::optional<Line> second_;
 };

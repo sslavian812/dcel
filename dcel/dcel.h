@@ -23,13 +23,14 @@ struct Dcel
 
 	Dcel()
     {
-        vertices.push_back(Vertex(-1, -1, (double)0/0,(double)0/0)); // infinite vertex
+        vertices.push_back(Vertex(-1, -1, 0.0, 0.0)); // infinite vertex
         faces.push_back(Face());   // infinite face
     }
 
     ~Dcel()
     {}
 
+    // visualization
     std::pair<point_2, point_2> getEdge(int edge) const
     {
         int v1, v2;
@@ -44,11 +45,14 @@ struct Dcel
         return res;
     }
 
-
     vector<int> subdivide(int e1, int e2, int l)
     {
         // returns [e1,e2,e3,e4,v]
         // e1 and e2 needs to be twins-half-edges of edge to be subdivided
+
+        int e1_victim = edges[e1].next;
+        int e2_victim = edges[e2].next;
+
         int other_line1 = edges[e1].line;
         int other_line2 = edges[e2].line;
 
@@ -75,10 +79,8 @@ struct Dcel
 
         // remember: some next&prev pointers are invalid
 
-        faces.push_back(Face(e3));
-        edges[e3].incidentFace = faces.size()-1;
-        faces.push_back(Face(e4));
-        edges[e4].incidentFace = faces.size()-1;
+        edges[e1_victim].prev = e3;
+        edges[e2_victim].prev = e4;
 
         vector<int> res = {e1,e2,e3,e4,v};
         return res;
@@ -90,23 +92,83 @@ struct Dcel
         e3=div[2];
         e4=div[3];
         v = div[4];
+
+        faces.push_back(Face(e4));
+        edges[e4].incidentFace = faces.size()-1;
+
+        faces.push_back(Face(e3));
+        edges[e3].incidentFace = faces.size()-1;
+    }
+
+
+    void halfSubdivide(int e1, int e2, int l, int &e3, int &e4, int &v, int f1, int f3)
+    {
+        vector<int> div = subdivide(e1, e2, l);
+        e3=div[2];
+        e4=div[3];
+        v = div[4];
+
+        //subdivide(e1, e2,l, e3,e4, v);
+
+        int victim = edges[e1].incidentFace;
+        faces[victim].startEdge = edges[e1].next;
+
+        edges[e1].incidentFace = f1;
+        edges[e3].incidentFace = f3;
+
+        faces.push_back(Face(e4));
+        edges[e4].incidentFace = faces.size()-1;
+
     }
 
     bool intersects(int edge, int l)
     {
         // determines, does the line intersect the edge or not.
-
         if(edges[edge].origin == 0)
-        {
             return intersects(edges[edge].twin, l);
-        }
 
         // origin != 0 now.
 
         Line line = lines[l];
         Line edge_line = lines[edges[edge].line];
+        Vertex v = vertices[edges[edge].origin];
 
-        return cg::orientation(point_2(0.0,0.0), edge_line.n, line.n) == cg::CG_RIGHT;
+        int twin = edges[edge].twin;
+
+        Line vl1 = lines[v.line1];
+        Line vl2 = lines[v.line2];
+
+
+        bool flag1 = false, flag2 = false;
+
+
+        orientation_t first, second;
+        first = orientation(Point3d(line), Point3d(vl1), Point3d(vl2));
+        if(cg::orientation(point_2(0,0), point_2(vl1.a, vl1.b), point_2(vl2.a, vl2.b)) == cg::CG_LEFT)
+            flag1=true;
+
+        if(edges[twin].origin == 0)
+        {
+            if(cg::orientation(point_2(0.0,0.0), line.n, edge_line.n) == cg::CG_RIGHT)
+                second = orientation_t::CG_RIGHT;
+            else if(cg::orientation(point_2(0.0,0.0), line.n, edge_line.n) == cg::CG_LEFT)
+                second = orientation_t::CG_LEFT;
+            else
+                second = orientation_t::CG_COLLINEAR;
+        }
+        else
+        {
+            v = vertices[edges[twin].origin];
+
+            vl1 = lines[v.line1];
+            vl2 = lines[v.line2];
+
+            second = orientation(Point3d(line), Point3d(vl1), Point3d(vl2));
+            if(cg::orientation(point_2(0,0), point_2(vl1.a, vl1.b), point_2(vl2.a, vl2.b)) == cg::CG_LEFT)
+                flag2=true;
+        }
+
+        return (first!=second && flag1==flag2) || (first==second && flag1!=flag2);
     }
 
     int getNearest(int l)
@@ -116,7 +178,6 @@ struct Dcel
          * векторное произведение нашей прямой на него - вектор вглубь,
          * а векторное произведение нашей прямой на следующий вектор - вектор на нас.
          * С одного из этих векторов и можно смело начинать*/
-
 
         int cur_edge = vertices[0].incidentEdge;
         int start_edge = cur_edge;
@@ -147,39 +208,6 @@ struct Dcel
     }
 
 
-/*    // deprecated
-//    void link_right(int e1, int e2, int begin, int end)
-//    {
-//        edges[e1].origin = edges[begin].origin;
-//        edges[begin].prev = e2;
-//        edges[e2].next = begin;
-//        edges[e1].prev = end;
-//        edges[end].next = e1;
-//    }
-
-//    //deprecated
-//    void link_left(int e1, int e2, vector<int> &div)
-//    {
-//        edges[e2].origin = div[4];
-//        edges[div[0]].next = e2;
-//        edges[e2].prev = div[0];
-//        edges[div[2]].prev = e1;
-//        edges[e1].next = div[2];
-//    }
-
-//    //deprecated
-//    void link_left(int e1, int e2, int ne1, int ne3, int v)
-//    {
-//        edges[e2].origin = v;
-
-//        edges[ne1].next = e2;
-//        edges[e2].prev = ne1;
-//        edges[ne3].prev = e1;
-//        edges[e1].next = ne3;
-//    }
-*/
-
-
     void link_forward(int e1, int e2, int prev, int next, int v)
     {
         // links "left" side of e1|e2 between prev-next edges
@@ -200,6 +228,22 @@ struct Dcel
         // links "right" side of e1|e2 between prev-next edges
         link_forward(e2, e1, next, prev, v); // enough to swap e1 and e2, according to images!!
     }
+
+
+    void updateFace(int edge)
+    {
+        int face = edges[edge].incidentFace;
+        int cur_edge = edges[edge].next;
+
+        while(cur_edge != edge)
+        {
+            edges[cur_edge].incidentFace = face;
+            cur_edge = edges[cur_edge].next;
+        }
+    }
+
+
+    //-----------------------------------------------------------------
 
     bool addLine(double a, double b, double c)
     {
@@ -282,6 +326,9 @@ struct Dcel
             edges[new_e1].next = e2;
             edges[e2].prev = new_e1;
             //closure
+
+            checkConsistensy(*this);
+
             return true;
         }
         else
@@ -306,19 +353,24 @@ struct Dcel
                 cur = edges[cur].next;
             } while(cur != begin);
 
+
+            int new_e1 = edges.size();
+            edges.push_back(Edge(start_vertex, l1));
+            int new_e2 = edges.size();
+            edges.push_back(Edge(-1, l2));
+            edges[new_e1].twin = new_e2;
+            edges[new_e2].twin = new_e1;
+
             if(in == begin || in == end)
             {
-                // undesired case; needs sone addition code
-
-                int new_e1 = edges.size();
-                edges.push_back(Edge(start_vertex, l1));
-                int new_e2 = edges.size();
-                edges.push_back(Edge(-1, l2));
-                edges[new_e1].twin = new_e2;
-                edges[new_e2].twin = new_e1;
-
                 int e1=in, e2 = edges[in].twin, e3,e4,v;
+
+//                int e1_victim = edges[e1].next;
+//                int e2_victim = edges[e2].next;
                 subdivide(e1, e2, l1, e3, e4, v);
+
+//                edges[e1_victim].prev = e3;
+//                edges[e2_victim].prev = e4;
 
                 link_forward(new_e1, new_e2, e1, e3, v);
 
@@ -337,15 +389,33 @@ struct Dcel
                     edges[new_e1].prev = end;
                 }
 
+                updateFace(e1);
+                updateFace(e3);
+
                 begin = e4;
                 end = e2;
                 start_vertex = v;
             }
-//            else
-//            {// best case: begin, ..., in, ...end;}
+            else
+            {
+                // case: begin, ..., in, ...end;
+
+                link_backward(new_e1, new_e2, begin, end, start_vertex);
+
+                int e1 = in, e2=edges[in].twin, e3, e4, v;
+                subdivide(e1,e2, l1, e3,e4,v);
+                link_forward(new_e1, new_e2, e1, e3, v);
+
+                updateFace(e1);
+                updateFace(e3);
+
+                begin = e4;
+                end = e2;
+                start_vertex = v;
+            }
 
 
-            while(in == in)
+            while(true)
             {
                 in = -1;
                 int cur = edges[begin].next;
@@ -373,8 +443,13 @@ struct Dcel
                 link_backward(new_e1, new_e2, begin, end, start_vertex);
 
                 int e1 = in, e2=edges[in].twin, e3, e4, v;
-                subdivide(e1,e2, l1, e3,e4,v);
+                halfSubdivide(e1, e2, l1, e3, e4, v, edges[begin].incidentFace, edges[end].incidentFace);
                 link_forward(new_e1, new_e2, e1, e3, v);
+
+                //TODO: check wether e1 e3 needed
+
+                updateFace(e1);
+                updateFace(e3);
 
                 begin = e4;
                 end = e2;
@@ -382,9 +457,9 @@ struct Dcel
             }
 
 
-            int new_e1 = edges.size();
+            new_e1 = edges.size();
             edges.push_back(Edge(start_vertex, l1));
-            int new_e2 = edges.size();
+            new_e2 = edges.size();
             edges.push_back(Edge(0, l2));
 
             edges[new_e1].twin = new_e2;
@@ -403,9 +478,79 @@ struct Dcel
 
             edges[prev_cur].next = new_e2;
             edges[new_e2].prev = prev_cur;
+
+            updateFace(begin);
+            updateFace(end);
+
+            checkConsistensy(*this);
+
+            //return Checker.checkConsistensy(*this);
             return true;
         }
 
         return false; // !!!! impossible
     }
+
+    static bool traverseFace(Dcel d, int f)
+    {
+        int start_edge = d.faces[f].startEdge;
+        int cur_edge = d.edges[start_edge].next;
+
+        int k = 0;
+        int max = 10000;
+
+        vector<bool> used(d.edges.size(), false);
+
+        bool res = true;
+
+        while(cur_edge != start_edge)
+        {
+            used[cur_edge] = true;
+            int next_edge = d.edges[cur_edge].next;
+
+            if(d.edges[cur_edge].incidentFace != f)
+            {
+                std::cerr<<"edge "<<cur_edge<<
+                           " has incorrect associated face: "<< d.edges[cur_edge].incidentFace<<
+                           " insted of " <<f<<std::endl;
+                res = false;
+            }
+
+            if(used[next_edge])
+            {
+                std::cerr<<"edge "<<next_edge<<" has been visited twice in face "<<f<<std::endl;
+                res = false;
+            }
+
+            if(next_edge<0 || next_edge >= d.edges.size())
+            {
+                std::cerr<<"edge "<<cur_edge<<" is invalid and has "<<next_edge<<" as it's next"<<std::endl;
+                return false;
+            }
+
+            if(k>=max)
+            {
+                std::cerr<<"face "<<f<<"has more than "<<max<<"edges "<<std::endl;
+                return false;
+            }
+            cur_edge = next_edge;
+            ++k;
+        }
+        return res;
+    }
+
+    static bool checkConsistensy(Dcel d)
+    {
+        bool res = true;
+        for(int i=0; i<d.faces.size(); ++i)
+        {
+            if( !traverseFace(d, i) )
+            {
+                std::cerr<<"face "<<i<<" is incorrect"<<std::endl;
+                res = false;
+            }
+        }
+        return res;
+    }
 };
+
