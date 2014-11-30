@@ -1,6 +1,7 @@
 #pragma once
 
 #include<vector>
+#include<list>
 
 #include "line.h"
 #include "orientation.h"
@@ -13,6 +14,7 @@
 #include "cg/primitives/point.h"
 
 using std::vector;
+using std::list;
 
 struct Dcel
 {

@@ -34,6 +34,7 @@ face.h
 orientation.h
 orientation3d.h
 line_wrapper.h
+triangulator.h
 )
 
 SET(SOURCES viewer.cpp)
