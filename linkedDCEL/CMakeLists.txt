@@ -30,6 +30,8 @@ add_subdirectory(3rdparty)
 SET(HEADERS
 line.h
 dcel.h
+linked_infinite_dcel.h
+linked_triangle_dcel.h
 vertex.h
 edge.h
 face.h

@@ -9,9 +9,9 @@
 #include <cg/primitives/point.h>
 
 #include "line.h"
-//#include "orientation.h"
 #include "dcel.h"
-
+#include "linked_infinite_dcel.h"
+#include "linked_triangle_dcel.h"
 
 
 using cg::point_2f;
@@ -20,13 +20,18 @@ using std::vector;
 
 struct sample_viewer : cg::visualization::viewer_adapter
 {
+    sample_viewer()
+    {
+        dcel_ = new LinkedInfiniteDcel();
+    }
+
     void draw(cg::visualization::drawer_type & drawer) const
     {
 
         vector<point_2> res_vertices;
         vector<pair<point_2, point_2> > res_edges;
 
-        dcel_.getAllToDraw(res_vertices, res_edges);
+        dcel_->getAllToDraw(res_vertices, res_edges);
 
         drawer.set_color(Qt::red);
 
@@ -84,7 +89,7 @@ struct sample_viewer : cg::visualization::viewer_adapter
         if(find(lines_.begin(), lines_.end(), l) != lines_.end())
             return false;
 
-        dcel_.addLine(l.a, l.b, l.c);
+        dcel_->addLine(l.a, l.b, l.c);
         lines_.push_back(l);
         return true;
     }
@@ -103,8 +108,24 @@ struct sample_viewer : cg::visualization::viewer_adapter
         return true;
     }
 
+
+    bool on_key(int key_code)
+    {
+        if(key_code == Qt::Key_T)
+        {
+            Line l1,l2,l3;
+            dcel_->getBounds(l1, l2, l3);
+            delete dcel_;
+            dcel_ = new LinkedTriangleDcel(l1, l2, l3);
+            return true;
+        }
+        return false;
+    }
+
+
+    Dcel* dcel_;
+    //LinkedTriangleDcel triangle_dcel_;
 private:
-    LinkedDcel dcel_;
     std::vector<Line> lines_;
 
     boost::optional<point_2f> current_point_;

@@ -31,6 +31,36 @@ struct Line
         n = point_2(a/r, b/r);  // normalized normal vector
     }
 
+    Line()
+    {}
+
+    Line(point_2f from, point_2f to)
+    {
+
+        //TODO:
+
+//        double x0 = p.x;
+//        double y0 = p.y;
+//        double u = vct.x;
+//        double v = vct.y;
+
+        this->a=double(to.y-from.y);
+        this->b=double(-(to.x-from.x));
+        this->c=double(-from.x*(to.y-from.y)+from.y*(to.x-from.x));
+
+        double r = sqrt(a*a+b*b);
+        n = point_2(a/r, b/r);  // normalized normal vector
+    }
+
+
+    Line(const Line &other)
+    {
+        this->a=other.a;
+        this->b=other.b;
+        this->c=other.c;
+        this->n=other.n;
+    }
+
     Line(double a, double b, double c): a(a), b(b), c(c)
     {
         double r = sqrt(a*a+b*b);
