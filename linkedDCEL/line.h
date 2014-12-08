@@ -36,14 +36,6 @@ struct Line
 
     Line(point_2f from, point_2f to)
     {
-
-        //TODO:
-
-//        double x0 = p.x;
-//        double y0 = p.y;
-//        double u = vct.x;
-//        double v = vct.y;
-
         this->a=double(to.y-from.y);
         this->b=double(-(to.x-from.x));
         this->c=double(-from.x*(to.y-from.y)+from.y*(to.x-from.x));

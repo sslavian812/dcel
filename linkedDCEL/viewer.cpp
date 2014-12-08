@@ -53,6 +53,14 @@ struct sample_viewer : cg::visualization::viewer_adapter
             drawer.set_color(Qt::green);
             drawer.draw_line(cur.getSegment().first, cur.getSegment().second);
         }
+
+
+//        drawer.set_color(Qt::green);
+//        for(int i=0; i<old_points_.size(); ++i)
+//        {
+//            drawer.draw_point(old_points_[i], 10);
+//        }
+
     }
 
     void print(cg::visualization::printer_type & p) const
@@ -115,8 +123,18 @@ struct sample_viewer : cg::visualization::viewer_adapter
         {
             Line l1,l2,l3;
             dcel_->getBounds(l1, l2, l3);
+            //vector<pair<point_2, point_2> > v;
+            //dcel_->getAllToDraw(old_points_, v);
             delete dcel_;
             dcel_ = new LinkedTriangleDcel(l1, l2, l3);
+            return true;
+        }
+
+        if(key_code == Qt::Key_I)
+        {
+            dcel_ = new LinkedInfiniteDcel();
+            //old_points_.resize(0);
+            lines_.resize(0);
             return true;
         }
         return false;
@@ -131,6 +149,8 @@ private:
     boost::optional<point_2f> current_point_;
     boost::optional<point_2f> normal_point_;
     boost::optional<Line> current_line_;
+
+    //vector<point_2> old_points_;
 
 };
 

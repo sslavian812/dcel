@@ -25,6 +25,7 @@ using std::map;
 
 using std::max;
 using std::min;
+using std::fabs;
 
 struct LinkedInfiniteDcel : Dcel
 {
@@ -96,18 +97,27 @@ struct LinkedInfiniteDcel : Dcel
         double max_x = vertices[1]->getPoint().x;
         double min_y = vertices[1]->getPoint().y;
         double max_y = vertices[1]->getPoint().y;
+
         for(int i=2; i<vertices.size(); ++i)
         {
+//            min_x = (min_x > vertices[i]->getPoint().x) ? vertices[i]->getPoint().x : min_x;
+//            max_x = (max_x < vertices[i]->getPoint().x) ? vertices[i]->getPoint().x : max_x;
+//            min_y = (min_y > vertices[i]->getPoint().y) ? vertices[i]->getPoint().y : min_y;
+//            max_y = (max_y < vertices[i]->getPoint().y) ? vertices[i]->getPoint().y : max_y;
+
             min_x = min(min_x, vertices[i]->getPoint().x);
             max_x = max(max_x, vertices[i]->getPoint().x);
             min_y = min(min_y, vertices[i]->getPoint().y);
             max_y = max(max_y, vertices[i]->getPoint().y);
         }
 
-        max_x = 2*max_x + 10;
-        max_y = 2*max_y + 10;
-        min_y -= 10;
-        min_x -= 10;
+        double dx = fabs(max_x - min_x);
+        double dy = (max_y - min_y);
+
+        max_x = (max_x + 20) + dx;
+        max_y = (max_y + 20) + dy;
+        min_y = (min_y - 10);
+        min_x = (min_x - 10);
 
         l1 = Line(point_2(min_x, min_y), point_2(min_x, max_y));
         l2 = Line(point_2(max_x, min_y), point_2(min_x, min_y));

@@ -30,6 +30,8 @@ struct LinkedTriangleDcel : Dcel
     vector<Face*> faces;
     Face* outer_face;
 
+    Edge* start_pool[4];
+
     LinkedTriangleDcel(Line l1, Line l2, Line l3)
     {
         Face* inner_face = new Face();
@@ -112,6 +114,10 @@ struct LinkedTriangleDcel : Dcel
         edges.push_back(e5);
         edges.push_back(e6);
 
+        start_pool[0] = e1; // 0
+        start_pool[1] = e3; // 180
+        start_pool[2] = e5; // 315
+        start_pool[3] = e1; // 0
     }
 
     ~LinkedTriangleDcel()
@@ -132,32 +138,19 @@ struct LinkedTriangleDcel : Dcel
 
     void getAllToDraw(std::vector<point_2> &res_vertices, vector<pair<point_2, point_2> > &res_edges) const
     {
-        if(faces.size()==1)
-            return;
-        if(faces.size()==2)
-        {
-             res_edges.push_back(edges[0]->getCoords(vertices[0]));
-             res_edges.push_back(edges[1]->getCoords(vertices[0]));
-
-             return;
-        }
-
         for(int i=0; i<faces.size(); ++i)
         {
             Edge* start_edge = faces[i]->startEdge;
             Edge* cur_edge = start_edge;
-
-            //pair<point_2, point_2> edge;
             do
             {
-                //edge = cur_edge->getCoords(vertices[0]);
-                res_edges.push_back(cur_edge->getCoords(vertices[0]));
+                res_edges.push_back(cur_edge->getCoords(NULL));
                 cur_edge = cur_edge->next;
 
             }while(cur_edge != start_edge);
          }
 
-        for(int i=1; i<vertices.size(); ++i)
+        for(int i=0; i<vertices.size(); ++i)
         {
             res_vertices.push_back(vertices[i]->getPoint());
         }
@@ -253,48 +246,26 @@ struct LinkedTriangleDcel : Dcel
     {
         // determines, does the line intersect the edge or not.
 
+        Vertex* v1 = edge->origin;
+        Vertex* v2 = edge->twin->origin;
 
-        if(edge->origin == vertices[0])
-            return intersects(edge->twin, line);
+        Line* v1l1 = v1->line1;
+        Line* v1l2 = v1->line2;
 
-        // origin != INFINITE_VERTEX now.
-
-        Line* edge_line = edge->line;
-        Vertex* v = edge->origin;
-
-        Edge* twin = edge->twin;
-
-        Line* vl1 = v->line1;
-        Line* vl2 = v->line2;
-
-
-        bool flag1 = false, flag2 = false;
-
+        Line* v2l1 = v2->line1;
+        Line* v2l2 = v2->line2;
 
         int turn_to_point_1, turn_to_point_2;
-        int turn_to_edge;
         int det1, det2;
 
-        turn_to_point_1 = (int) orientation(Point3d(*line), Point3d(*vl1), Point3d(*vl2));
-        det1 = (int)cg::orientation(point_2(0,0), point_2(vl1->a, vl1->b), point_2(vl2->a, vl2->b));
+        turn_to_point_1 = (int) orientation(Point3d(*line), Point3d(*v1l1), Point3d(*v1l2));
+        det1 = (int)cg::orientation(point_2(0,0), point_2(v1l1->a, v1l1->b), point_2(v1l2->a, v1l2->b));
 
-        if(twin->origin == vertices[0]) // half-infinite edge
-        {
-           turn_to_edge = (int)cg::orientation(point_2(0.0,0.0), line->n, edge_line->n);
 
-           return turn_to_point_1 * det1 != turn_to_edge;
-        }
-        else   // ordinary edge
-        {
-            v = twin->origin;
-            vl1 = v->line1;
-            vl2 = v->line2;
+        turn_to_point_2 = (int) orientation(Point3d(*line), Point3d(*v2l1), Point3d(*v2l2));
+        det2 = (int)cg::orientation(point_2(0,0), point_2(v2l1->a, v2l1->b), point_2(v2l2->a, v2l2->b));
 
-            turn_to_point_2 = (int) orientation(Point3d(*line), Point3d(*vl1), Point3d(*vl2));
-            det2 = (int)cg::orientation(point_2(0,0), point_2(vl1->a, vl1->b), point_2(vl2->a, vl2->b));
-
-            return turn_to_point_1 * det1 != turn_to_point_2 * det2;
-        }
+        return turn_to_point_1 * det1 != turn_to_point_2 * det2;
     }
 
     void linkForward(Edge* e1, Edge* e2, Edge* prev, Edge* next, Vertex* v)
@@ -336,6 +307,42 @@ struct LinkedTriangleDcel : Dcel
         }
     }
 
+    Edge* getStartEdge(Line* line)
+    {
+        /* итерируюсь по ребрам (читай ориентированным прямым)
+         * внешней грани. Ищу такое ребро, что
+         * векторное произведение нашей прямой на него - вектор вглубь,
+         * а векторное произведение нашей прямой на следующий вектор - вектор на нас.
+         * С одного из этих векторов и можно смело начинать,
+         * но лучше со "следующего вектора"*/
+
+        const point_2 Z(0.0,0.0);
+
+        Edge* cur_edge;
+        Edge* next_edge;
+
+        for(int i=0; i<3; ++i)
+        {
+            Edge* cur_edge = start_pool[i];
+            Edge* next_edge = start_pool[i+1];
+
+            if(cg::orientation(Z, line->getDirection(), cur_edge->line->getDirection())  == cg::CG_RIGHT &&
+                               cg::orientation(Z, line->getDirection(), next_edge->line->getDirection()) == cg::CG_LEFT)
+            {
+                return next_edge;
+            }
+        }
+
+//        if(cg::orientation(Z, line->getDirection(), cur_edge->line->getDirection())  == cg::CG_RIGHT &&
+//                           cg::orientation(Z, line->getDirection(), next_edge->line->getDirection()) == cg::CG_LEFT)
+//        {
+//            return next_edge;
+//        }
+
+        return NULL; // sometimes reachable, but I don't know why
+    }
+
+
 
     // :utils
     //-----------------------------------------------------------------
@@ -354,7 +361,7 @@ struct LinkedTriangleDcel : Dcel
         Edge* in;
         Vertex* start_vertex;
 
-        begin = outer_face->startEdge;
+        begin = getStartEdge(line1);
         end = begin->prev;
 
         Edge* cur = begin;
