@@ -115,8 +115,8 @@ struct LinkedTriangleDcel : Dcel
         edges.push_back(e6);
 
         start_pool[0] = e1; // 0
-        start_pool[1] = e3; // 180
-        start_pool[2] = e5; // 315
+        start_pool[1] = e5; // 180
+        start_pool[2] = e3; // 315
         start_pool[3] = e1; // 0
     }
 
@@ -188,6 +188,9 @@ struct LinkedTriangleDcel : Dcel
         e2->twin = e3;
         e3->twin = e2;
 
+        e1->next->prev = e3;
+        e2->next->prev = e4;
+
         e4->next = e2->next;
         e3->next = e1->next;
 
@@ -195,8 +198,6 @@ struct LinkedTriangleDcel : Dcel
         e3->prev=e1;
         e2->next=e4;
         e4->prev=e2;
-
-        // remember: some next&prev pointers are invalid
 
         e1_victim->prev = e3;
         e2_victim->prev = e4;
@@ -332,13 +333,6 @@ struct LinkedTriangleDcel : Dcel
                 return next_edge;
             }
         }
-
-//        if(cg::orientation(Z, line->getDirection(), cur_edge->line->getDirection())  == cg::CG_RIGHT &&
-//                           cg::orientation(Z, line->getDirection(), next_edge->line->getDirection()) == cg::CG_LEFT)
-//        {
-//            return next_edge;
-//        }
-
         return NULL; // sometimes reachable, but I don't know why
     }
 
@@ -381,7 +375,8 @@ struct LinkedTriangleDcel : Dcel
         Edge* e4;
         Vertex* v;
 
-        subdivide(e1, e2, line1, e3, e4, v);
+        //subdivide(e1, e2, line1, e3, e4, v);
+        halfSubdivide(e1, e2, line1, e3, e4, v, outer_face, outer_face);
 
         begin = e4;
         end = e2;
@@ -430,8 +425,13 @@ struct LinkedTriangleDcel : Dcel
             end = e2;
             start_vertex = v;
 
-            if(begin->incidentFace == outer_face)
+            if(end->incidentFace == outer_face)
+            {
+                delete begin->incidentFace;
+                faces.pop_back();
+                begin->incidentFace = outer_face;
                 break;
+            }
         }
 
         checkConsistensy();

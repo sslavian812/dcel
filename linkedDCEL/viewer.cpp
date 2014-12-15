@@ -53,14 +53,6 @@ struct sample_viewer : cg::visualization::viewer_adapter
             drawer.set_color(Qt::green);
             drawer.draw_line(cur.getSegment().first, cur.getSegment().second);
         }
-
-
-//        drawer.set_color(Qt::green);
-//        for(int i=0; i<old_points_.size(); ++i)
-//        {
-//            drawer.draw_point(old_points_[i], 10);
-//        }
-
     }
 
     void print(cg::visualization::printer_type & p) const
