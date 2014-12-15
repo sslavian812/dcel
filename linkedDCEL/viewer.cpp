@@ -54,7 +54,7 @@ struct sample_viewer : cg::visualization::viewer_adapter
         }
 
 
-        if(current_line_)
+        if(!localization_mode_ && current_line_)
         {
             Line cur = current_line_.get();
             drawer.set_color(Qt::green);
@@ -83,6 +83,7 @@ struct sample_viewer : cg::visualization::viewer_adapter
     {
         if(localization_mode_)
         {
+            actual_face_.resize(0);
             dcel_->localize(p, actual_face_);
             current_point_.reset();
             normal_point_.reset();

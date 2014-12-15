@@ -37,8 +37,8 @@ struct LinkedTriangleDcel : Dcel
         Face* inner_face = new Face();
         outer_face = new Face();
 
-        faces.push_back(inner_face);
         faces.push_back(outer_face);
+        faces.push_back(inner_face);
 
         Line* line1 = new Line(l1);
         Line* line1r = new Line(-l1.a, -l1.b, -l1.c);
@@ -137,7 +137,43 @@ struct LinkedTriangleDcel : Dcel
 
     void localize(point_2f p, vector<pair<point_2, point_2> > &v) const
     {
+        Edge* cur;
 
+
+        for(int i=1; i<faces.size(); ++i)
+        {
+            bool flag = true;
+            cur = faces[i]->startEdge;
+            do
+            {
+                if(cg::orientation(point_2(0,0), cur->line->getDirection(), p) != cg::CG_LEFT)
+                {
+                    flag = false;
+                    break;
+                }
+                cur = cur->next;
+            }while(cur != faces[i]->startEdge);
+
+            if(flag)
+            {
+                cur = faces[i]->startEdge;
+                do
+                {
+                    v.push_back(cur->getCoords(NULL));
+                    cur = cur->next;
+                }while(cur != faces[i]->startEdge);
+                return;
+            }
+        }
+
+
+        cur = faces[0]->startEdge;
+        do
+        {
+            v.push_back(cur->getCoords(NULL));
+            cur = cur->next;
+        }while(cur != faces[0]->startEdge);
+        return;
     }
 
     void getAllToDraw(std::vector<point_2> &res_vertices, vector<pair<point_2, point_2> > &res_edges) const
@@ -464,6 +500,15 @@ struct LinkedTriangleDcel : Dcel
         {
             used[cur_edge] = true;
             Edge* next_edge = cur_edge->next;
+
+            if(f!=0 && cg::orientation(point_2(0,0),
+                               cur_edge->line->getDirection(),
+                               next_edge->line->getDirection()) != cg::CG_LEFT)
+            {
+                cerr<<"edge "<<cur_edge<<" int face "<<f<<" has incorrect TURN!!"<<endl;
+                res = false;
+            }
+
 
             if(cur_edge->incidentFace != face)
             {
