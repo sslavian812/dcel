@@ -47,6 +47,13 @@ struct sample_viewer : cg::visualization::viewer_adapter
             drawer.draw_line(res_edges[i].first, res_edges[i].second);
         }
 
+        drawer.set_color(Qt::white);
+        for(int i=0; i<actual_face_.size(); ++i)
+        {
+            drawer.draw_line(actual_face_[i].first, actual_face_[i].second, 3);
+        }
+
+
         if(current_line_)
         {
             Line cur = current_line_.get();
@@ -74,6 +81,15 @@ struct sample_viewer : cg::visualization::viewer_adapter
 
     bool on_release(const point_2f & p)
     {
+        if(localization_mode_)
+        {
+            dcel_->localize(p, actual_face_);
+            current_point_.reset();
+            normal_point_.reset();
+            current_line_.reset();
+            return true;
+        }
+
         if (!current_point_)
             return false;
 
@@ -115,8 +131,6 @@ struct sample_viewer : cg::visualization::viewer_adapter
         {
             Line l1,l2,l3;
             dcel_->getBounds(l1, l2, l3);
-            //vector<pair<point_2, point_2> > v;
-            //dcel_->getAllToDraw(old_points_, v);
             delete dcel_;
             dcel_ = new LinkedTriangleDcel(l1, l2, l3);
             return true;
@@ -125,16 +139,24 @@ struct sample_viewer : cg::visualization::viewer_adapter
         if(key_code == Qt::Key_I)
         {
             dcel_ = new LinkedInfiniteDcel();
-            //old_points_.resize(0);
             lines_.resize(0);
             return true;
+        }
+        if(key_code == Qt::Key_L)
+        {
+            localization_mode_ = true;
+            return true;
+        }
+        if(key_code == Qt::Key_A)
+        {
+            localization_mode_ = false;
+            actual_face_ = {};
         }
         return false;
     }
 
 
     Dcel* dcel_;
-    //LinkedTriangleDcel triangle_dcel_;
 private:
     std::vector<Line> lines_;
 
@@ -142,6 +164,9 @@ private:
     boost::optional<point_2f> normal_point_;
     boost::optional<Line> current_line_;
 
+    std::vector<pair<point_2, point_2> > actual_face_; // vector of segments
+
+    bool localization_mode_ = false;
     //vector<point_2> old_points_;
 
 };

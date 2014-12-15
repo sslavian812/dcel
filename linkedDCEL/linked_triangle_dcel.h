@@ -135,6 +135,10 @@ struct LinkedTriangleDcel : Dcel
         {delete faces[i];}
     }
 
+    void localize(point_2f p, vector<pair<point_2, point_2> > &v) const
+    {
+
+    }
 
     void getAllToDraw(std::vector<point_2> &res_vertices, vector<pair<point_2, point_2> > &res_edges) const
     {
