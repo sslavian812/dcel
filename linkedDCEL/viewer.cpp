@@ -133,6 +133,16 @@ struct sample_viewer : cg::visualization::viewer_adapter
             dcel_->getBounds(l1, l2, l3);
             delete dcel_;
             dcel_ = new LinkedTriangleDcel(l1, l2, l3);
+
+            for(int i=0; i<lines_.size(); ++i)
+            {
+                Line l = lines_[i];
+                if(l == l1 || l == l2 || l == l3)
+                    continue;
+                dcel_->addLine(l.a, l.b, l.c);
+            }
+            lines_.resize(0);
+
             return true;
         }
 
