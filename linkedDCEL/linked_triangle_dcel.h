@@ -146,7 +146,9 @@ struct LinkedTriangleDcel : Dcel
             cur = faces[i]->startEdge;
             do
             {
-                if(cg::orientation(point_2(0,0), cur->line->getDirection(), p) != cg::CG_LEFT)
+                if(cg::orientation(point_2(0,0),
+                                   cur->line->getDirection(),
+                                   point_2(p.x-cur->origin->getPoint().x, p.y-cur->origin->getPoint().y)) != cg::CG_LEFT)
                 {
                     flag = false;
                     break;
