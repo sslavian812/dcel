@@ -139,7 +139,6 @@ struct LinkedTriangleDcel : Dcel
     {
         Edge* cur;
 
-
         for(int i=1; i<faces.size(); ++i)
         {
             bool flag = true;
@@ -167,7 +166,6 @@ struct LinkedTriangleDcel : Dcel
                 return;
             }
         }
-
 
         cur = faces[0]->startEdge;
         do
@@ -419,6 +417,7 @@ struct LinkedTriangleDcel : Dcel
 
         //subdivide(e1, e2, line1, e3, e4, v);
         halfSubdivide(e1, e2, line1, e3, e4, v, outer_face, outer_face);
+        v->isOnBorder = true;
 
         begin = e4;
         end = e2;
@@ -472,6 +471,7 @@ struct LinkedTriangleDcel : Dcel
                 delete begin->incidentFace;
                 faces.pop_back();
                 begin->incidentFace = outer_face;
+                v->isOnBorder = true;
                 break;
             }
         }
