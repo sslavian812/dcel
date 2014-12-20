@@ -3,6 +3,7 @@
 
 #include "edge.h"
 
+
 struct Edge;
 
 struct Face
@@ -15,15 +16,19 @@ struct Face
     Face(Edge* edge): startEdge(edge)
     {}
 
-//    bool isInside(point_2 point)
+//    bool contains(point_2 p)
 //    {
-//        int cur = startEdge;
+//        Edge* cur = startEdge;
 //        do
 //        {
-//            if(!cur.line.isOnLeft(p))
+//            if(cg::orientation(point_2(0,0),
+//                               cur->line->getDirection(),
+//                               point_2(p.x-cur->origin->getPoint().x, p.y-cur->origin->getPoint().y)) == cg::CG_RIGHT)
+//            {
 //                return false;
-//            cur = cur.next;
-//        }while (cur!= startEdge);
+//            }
+//            cur = cur->next;
+//        }while(cur != startEdge);
 //        return true;
 //    }
 };

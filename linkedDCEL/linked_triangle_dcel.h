@@ -3,6 +3,7 @@
 #include<vector>
 #include<list>
 #include<map>
+#include<string>
 
 #include "line.h"
 #include "orientation.h"
@@ -21,6 +22,7 @@ using std::pair;
 using std::cerr;
 using std::endl;
 using std::map;
+using std::string;
 
 struct LinkedTriangleDcel : Dcel
 {
@@ -133,6 +135,34 @@ struct LinkedTriangleDcel : Dcel
 
         for(int i=0; i<faces.size(); ++i)
         {delete faces[i];}
+    }
+
+    LinkedTriangleDcel( const LinkedTriangleDcel& other )
+    {
+        // creation copies of all lines adges, vertices and faces;
+        // feature: let's construct new dcel from (l0, l2, l4)
+        // and add all even lines l6, l8...  to it. so that dcel will de copied automatically
+        Line l0 = *(other.lines[0]);
+        Line l2 = *(other.lines[2]);
+        Line l4 = *(other.lines[4]);
+        LinkedTriangleDcel t = LinkedTriangleDcel(l0,l2, l4);
+        for(int i=6; i<other.lines.size(); i+=2)
+        {
+            Line l = *(other.lines[i]);
+            t.addLine(l.a, l.b, l.c);
+        }
+        // swap all the fields:
+        std::swap(this->lines        , t.lines);
+        std::swap(this->edges        , t.edges);
+        std::swap(this->vertices     , t.vertices);
+        std::swap(this->outer_face   , t.outer_face);
+        std::swap(this->faces        , t.faces);
+        std::swap(this->start_pool[0], t.start_pool[0]);
+        std::swap(this->start_pool[1], t.start_pool[1]);
+        std::swap(this->start_pool[2], t.start_pool[2]);
+        std::swap(this->start_pool[3], t.start_pool[3]);
+
+        this->checkConsistensy("copy constructor");
     }
 
     void localize(point_2f p, vector<pair<point_2, point_2> > &v) const
@@ -417,7 +447,7 @@ struct LinkedTriangleDcel : Dcel
 
         //subdivide(e1, e2, line1, e3, e4, v);
         halfSubdivide(e1, e2, line1, e3, e4, v, outer_face, outer_face);
-        v->isOnBorder = true;
+//        v->isOnBorder = true;
 
         begin = e4;
         end = e2;
@@ -471,12 +501,12 @@ struct LinkedTriangleDcel : Dcel
                 delete begin->incidentFace;
                 faces.pop_back();
                 begin->incidentFace = outer_face;
-                v->isOnBorder = true;
+//                v->isOnBorder = true;
                 break;
             }
         }
 
-        checkConsistensy();
+        checkConsistensy("line added");
         return true;
     }
 
@@ -549,7 +579,7 @@ struct LinkedTriangleDcel : Dcel
         return res;
     }
 
-    bool checkConsistensy()
+    bool checkConsistensy(string s)
     {
         bool res = true;
         for(int i=0; i<faces.size(); ++i)
@@ -561,9 +591,9 @@ struct LinkedTriangleDcel : Dcel
             }
         }
         if(res)
-            std::cerr<<"dcel is CORRECT!"<<std::endl;
+            std::cerr<<s<<": dcel is CORRECT!"<<std::endl;
         else
-            std::cerr<<"dcel is INCORRECT!"<<std::endl;
+            std::cerr<<s<<": dcel is INCORRECT!"<<std::endl;
         return res;
     }
 
