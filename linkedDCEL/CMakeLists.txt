@@ -40,7 +40,6 @@ orientation3d.h
 line_wrapper.h
 triangle.h
 kirkpatrick.h
-node.h
 )
 
 SET(SOURCES

@@ -446,7 +446,7 @@ struct LinkedTriangleDcel : Dcel
         return true;
     }
 
-    void addEdge(Vertex* from, Vertex* to, Face* bigface)
+    Face* addEdge(Vertex* from, Vertex* to, Face* bigface)
     {
         Edge* e1 = new Edge(from, NULL);
         Edge* e2 = new Edge(to, NULL);
@@ -460,10 +460,10 @@ struct LinkedTriangleDcel : Dcel
         while(cur_edge->origin != from)
             cur_edge = cur_edge->next;
 
-        if(cur_edge->next->next->origin != to)
-        {
-            std::cerr<<"IMPOSSIBLE!!!"<<std::endl;
-        }
+//        if(cur_edge->next->next->origin != to)
+//        {
+//            std::cerr<<"IMPOSSIBLE!!!"<<std::endl;
+//        }
 
         e2->next = cur_edge;
         e2->prev = cur_edge->next;
@@ -483,6 +483,7 @@ struct LinkedTriangleDcel : Dcel
         cur_edge->incidentFace = smallface;
         cur_edge->next->incidentFace = smallface;
         faces.push_back(smallface);
+        return smallface;
     }
 
     // :utils
@@ -646,7 +647,7 @@ struct LinkedTriangleDcel : Dcel
         {
             //remove
             edges.erase(std::remove(edges.begin(), edges.end(), to_clear_edges[i]), edges.end());
-            delete to_clear_edges[i];
+//leek!            delete to_clear_edges[i];
         }
 
         vector<Face*> to_clear_faces;
@@ -671,17 +672,20 @@ struct LinkedTriangleDcel : Dcel
         {
             //remove
             faces.erase(std::remove(faces.begin(), faces.end(), to_clear_faces[i]), faces.end());
-             to_clear_faces[i];
+//leek!            delete to_clear_faces[i];
         }
 
-       // remove
+        //remove
         vertices.erase(std::remove(vertices.begin(), vertices.end(), v), vertices.end());
-        delete v;
+//leek!        delete v;
         return checkConsistensy("vertex deleted");
     }
 
-    void triangulateFace(Face* face)
+    // отдает вектор фейсов-треугольников
+    vector<Face*> triangulateFace(Face* face)
     {
+        vector<Face*> fs;
+        fs.push_back(face);
         list<Vertex*> border = constructBorder(face);
         int border_size = border.size();
 
@@ -705,16 +709,24 @@ struct LinkedTriangleDcel : Dcel
                 {
                     border.erase(it2);
                     border_size--;
-                    addEdge(v1, v3, face);
+                    fs.push_back(addEdge(v1, v3, face)); // отдает новый фейс
                 }
             }
         }
+        return fs;
     }
 
     void triangulateDcel()
     {
         for(int i=1; i<faces.size(); ++i)
-            triangulateFace(faces[i]);
+        {
+            vector<Face*> newFaces = triangulateFace(faces[i]);
+            for(int i=0; i<newFaces.size(); ++i)
+            {
+//leek!                // never deleted!
+                newFaces[i]->triangle = new Triangle(newFaces[i]->getVertices(), newFaces[i]->getStrongEdge());
+            }
+        }
     }
     // :interface
     //----------------------------------------------------------------

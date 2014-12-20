@@ -1,6 +1,7 @@
 #pragma once
 
 #include<vector>
+using std::vector;
 #include"edge.h"
 #include"vertex.h"
 #include <cg/primitives/point.h>
@@ -9,16 +10,19 @@ using cg::point_2;
 #include <cg/primitives/segment.h>
 #include <cg/operations/has_intersection/segment_segment.h>
 
-using std::vector;
 using cg::segment_2t;
 using cg::has_intersection;
 
+struct Edge;
+struct Vertex;
+
 struct Triangle
 {
-     vector<Vertex*> v;
+    vector<Vertex*> v;
     Edge* e;
+    vector<Triangle*> successors;
 
-    Triangle(vector<Vertex*> v, Edge* e): v(v), e(e)
+    Triangle(vector<Vertex*> v, Edge* e = NULL): v(v), e(e)
     {}
 
     bool intersects(Triangle* other)

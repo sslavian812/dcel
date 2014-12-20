@@ -7,6 +7,7 @@ using std::vector;
 
 #include "edge.h"
 #include "vertex.h"
+#include "triangle.h"
 
 
 struct Edge;
@@ -15,11 +16,12 @@ struct Vertex;
 struct Face
 {
     Edge* startEdge;
+    Triangle * triangle;
 
-    Face(): startEdge(NULL)
+    Face(): startEdge(NULL), triangle(NULL)
     {}
 
-    Face(Edge* edge): startEdge(edge)
+    Face(Edge* edge): startEdge(edge), triangle(NULL)
     {}
 
     vector<Vertex*> getVertices();
