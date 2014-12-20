@@ -16,6 +16,8 @@
 
 #include "cg/primitives/point.h"
 
+#include <boost/optional.hpp>
+
 using std::vector;
 using std::list;
 using std::pair;
@@ -23,6 +25,7 @@ using std::cerr;
 using std::endl;
 using std::map;
 using std::string;
+using cg::point_2t;
 
 struct LinkedTriangleDcel : Dcel
 {
@@ -206,7 +209,9 @@ struct LinkedTriangleDcel : Dcel
         return;
     }
 
-    void getAllToDraw(std::vector<point_2> &res_vertices, vector<pair<point_2, point_2> > &res_edges) const
+    void getAllToDraw(std::vector<point_2> &res_vertices,
+                      vector<pair<point_2, point_2> > &res_edges,
+                      vector<pair<point_2, point_2> > &tr_edges ) const
     {
         for(int i=0; i<faces.size(); ++i)
         {
@@ -214,7 +219,10 @@ struct LinkedTriangleDcel : Dcel
             Edge* cur_edge = start_edge;
             do
             {
-                res_edges.push_back(cur_edge->getCoords(NULL));
+                if(cur_edge->line == NULL)
+                    tr_edges.push_back(cur_edge->getCoords(NULL));
+                else
+                  res_edges.push_back(cur_edge->getCoords(NULL));
                 cur_edge = cur_edge->next;
 
             }while(cur_edge != start_edge);
@@ -408,17 +416,108 @@ struct LinkedTriangleDcel : Dcel
 
     typedef list<Vertex*>::iterator lvi;
 
-    lvi cunstructBorder(Face* face)
+    list<Vertex*> constructBorder(Face* face)
     {
         Edge* cur_edge = face->startEdge;
         Edge* start_edge = cur_edge;
-        lvi l;
+        list<Vertex*> l;
         do
         {
             l.insert(l.end(),cur_edge->origin);
             cur_edge = cur_edge->next;
         }while(cur_edge != start_edge);
         return l;
+    }
+
+    typedef boost::numeric::interval_lib::unprotect<boost::numeric::interval<double> >::type interval;
+
+    bool leftTurn(Vertex* v1, Vertex* v2, Vertex* v3)
+    {
+        boost::numeric::interval<double>::traits_type::rounding _;
+
+        point_2t<interval> a = v1->getIntervalPoint();
+        point_2t<interval> b = v2->getIntervalPoint();
+        point_2t<interval> c = v3->getIntervalPoint();
+
+        interval res =   (b.x - a.x) * (c.y - a.y)
+                       - (b.y - a.y) * (c.x - a.x);
+
+        if (res.lower() > 0)
+           return true;
+        if (res.upper() < 0)
+           return false;
+        if (res.upper() == res.lower())
+           return false;
+
+        // rational
+
+        point_2t<mpq_class> d = v1->getMpqPoint();
+        point_2t<mpq_class> e = v2->getMpqPoint();
+        point_2t<mpq_class> f = v3->getMpqPoint();
+
+        mpq_class res1 =   (e.x - d.x) * (f.y - d.y)
+                        - (e.y - d.y) * (f.x - d.x);
+
+        int cres = cmp(res1, 0);
+
+        if(cres > 0)
+            return true;
+        else
+            return false;
+    }
+
+    bool isEar(list<Vertex*> border, Vertex* v1, Vertex* v2, Vertex* v3)
+    {
+        lvi it = border.begin();
+        while(it != border.end())
+        {
+            if(*it == v1 || *it == v2 || *it == v3)
+            {
+                it++;
+                continue;
+            }
+            if(leftTurn(v1, v2, *it) && leftTurn(v2, v3, *it) && leftTurn(v3, v1, *it))
+                return false;
+            it++;
+        }
+        return true;
+    }
+
+    void addEdge(Vertex* from, Vertex* to, Face* bigface)
+    {
+        Edge* e1 = new Edge(from, NULL);
+        Edge* e2 = new Edge(to, NULL);
+        e1->twin = e2;
+        e2->twin = e1;
+
+        Edge* cur_edge = bigface->startEdge;
+
+        while(cur_edge->origin != from)
+            cur_edge = cur_edge->next;
+
+        if(cur_edge->next->next->origin != to)
+        {
+            std::cerr<<"IMPOSSIBLE!!!"<<std::endl;
+        }
+
+        e2->next = cur_edge;
+        e2->prev = cur_edge->next;
+        e1->next = cur_edge->next->next;
+        e1->prev = cur_edge->prev;
+
+        cur_edge->prev->next = e1;
+        e1->next->prev = e1;
+        cur_edge->prev = e2;
+        cur_edge->next->next = e2;
+
+        bigface->startEdge = e1;
+        e1->incidentFace = bigface;
+
+        Face* smallface = new Face(e2);
+        e2->incidentFace =smallface;
+        cur_edge->incidentFace = smallface;
+        cur_edge->next->incidentFace = smallface;
+
     }
 
     // :utils
@@ -616,36 +715,42 @@ struct LinkedTriangleDcel : Dcel
         return checkConsistensy("vertex deleted");
     }
 
-
     void triangulateFace(Face* face)
     {
         list<Vertex*> border = constructBorder(face);
         int border_size = border.size();
 
-        lvi it=border.begin();
+        lvi it1=border.begin();
         lvi it2;
         lvi it3;
         while(border_size > 3)
         {
-            it2 = it;
-            Vertex* v1,v2,v3;
-            v1 = *it2; ++it2;
+            it2 = it1;
+
+            Vertex* v1 = *it2; ++it2;
             if(it2 == border.end()) it2=border.begin();
             it3=it2;
-            v2 = *it3; ++it3;
+            Vertex* v2 = *it3; ++it3;
             if(it3 == border.end()) it3=border.begin();
-            v3 = *it3;
+            Vertex* v3 = *it3;
 
             if(leftTurn(v1,v2,v3))
             {
                 if(isEar(border, v1,v2,v3))
                 {
-                    curEar(border, it1, it2, it3);
+                    border.erase(it2);
+                    border_size--;
+                    addEdge(v1, v3, face);
                 }
             }
         }
     }
 
+    void triangulateDcel()
+    {
+        for(int i=1; i<faces.size(); ++i)
+            triangulateFace(faces[i]);
+    }
     // :interface
     //----------------------------------------------------------------
     // checkers:

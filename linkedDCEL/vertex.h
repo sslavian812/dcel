@@ -53,13 +53,13 @@ struct Vertex
     {
         boost::numeric::interval<double>::traits_type::rounding _;
 
-        point_2t<interval> p = line1->intervalIntersect(line2);
+        point_2t<interval> p = line1->intervalIntersect(*line2);
         return p;
     }
 
-    point_2t<mpq_class> getMpqPoint(Line other)
+    point_2t<mpq_class> getMpqPoint()
     {
-        point_2t<mpq_class> p = line1->mpqIntersect(line2);
+        point_2t<mpq_class> p = line1->mpqIntersect(*line2);
         return p;
     }
 };

@@ -62,7 +62,9 @@ struct LinkedInfiniteDcel : Dcel
 
     }
 
-    void getAllToDraw(std::vector<point_2> &res_vertices, vector<pair<point_2, point_2> > &res_edges) const
+    void getAllToDraw(std::vector<point_2> &res_vertices,
+                      vector<pair<point_2, point_2> > &res_edges,
+                      vector<pair<point_2, point_2> > &tr_edges) const
     {
         if(faces.size()==1)
             return;

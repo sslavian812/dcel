@@ -30,8 +30,8 @@ struct sample_viewer : cg::visualization::viewer_adapter
 
         vector<point_2> res_vertices;
         vector<pair<point_2, point_2> > res_edges;
-
-        dcel_->getAllToDraw(res_vertices, res_edges);
+        vector<pair<point_2, point_2> > tr_edges;
+        dcel_->getAllToDraw(res_vertices, res_edges, tr_edges);
 
         drawer.set_color(Qt::red);
 
@@ -41,10 +41,15 @@ struct sample_viewer : cg::visualization::viewer_adapter
         }
 
         drawer.set_color(Qt::blue);
-
         for(int i=0; i<res_edges.size(); ++i)
         {
             drawer.draw_line(res_edges[i].first, res_edges[i].second);
+        }
+
+        drawer.set_color(Qt::green);
+        for(int i=0; i<tr_edges.size(); ++i)
+        {
+            drawer.draw_line(tr_edges[i].first, tr_edges[i].second);
         }
 
         drawer.set_color(Qt::white);
@@ -166,7 +171,7 @@ struct sample_viewer : cg::visualization::viewer_adapter
         if(key_code == Qt::Key_C)
         {
             LinkedTriangleDcel* d = reinterpret_cast<LinkedTriangleDcel*>(dcel_);
-            d->deleteVertex(d->vertices.back());
+            d->triangulateDcel();
             return true;
         }
         return false;
