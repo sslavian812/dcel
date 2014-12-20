@@ -62,6 +62,42 @@ struct Vertex
         point_2t<mpq_class> p = line1->mpqIntersect(*line2);
         return p;
     }
+
+    static bool leftTurn(Vertex* v1, Vertex* v2, Vertex* v3)
+    {
+        //interval
+        boost::numeric::interval<double>::traits_type::rounding _;
+
+        point_2t<interval> a = v1->getIntervalPoint();
+        point_2t<interval> b = v2->getIntervalPoint();
+        point_2t<interval> c = v3->getIntervalPoint();
+
+        interval res =   (b.x - a.x) * (c.y - a.y)
+                       - (b.y - a.y) * (c.x - a.x);
+
+        if (res.lower() > 0)
+           return true;
+        if (res.upper() < 0)
+           return false;
+        if (res.upper() == res.lower())
+           return false;
+
+        // rational
+
+        point_2t<mpq_class> d = v1->getMpqPoint();
+        point_2t<mpq_class> e = v2->getMpqPoint();
+        point_2t<mpq_class> f = v3->getMpqPoint();
+
+        mpq_class res1 =   (e.x - d.x) * (f.y - d.y)
+                        - (e.y - d.y) * (f.x - d.x);
+
+        int cres = cmp(res1, 0);
+
+        if(cres > 0)
+            return true;
+        else
+            return false;
+    }
 };
 
 #endif // VERTEX_H

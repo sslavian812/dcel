@@ -429,43 +429,6 @@ struct LinkedTriangleDcel : Dcel
         return l;
     }
 
-    typedef boost::numeric::interval_lib::unprotect<boost::numeric::interval<double> >::type interval;
-
-    bool leftTurn(Vertex* v1, Vertex* v2, Vertex* v3)
-    {
-        boost::numeric::interval<double>::traits_type::rounding _;
-
-        point_2t<interval> a = v1->getIntervalPoint();
-        point_2t<interval> b = v2->getIntervalPoint();
-        point_2t<interval> c = v3->getIntervalPoint();
-
-        interval res =   (b.x - a.x) * (c.y - a.y)
-                       - (b.y - a.y) * (c.x - a.x);
-
-        if (res.lower() > 0)
-           return true;
-        if (res.upper() < 0)
-           return false;
-        if (res.upper() == res.lower())
-           return false;
-
-        // rational
-
-        point_2t<mpq_class> d = v1->getMpqPoint();
-        point_2t<mpq_class> e = v2->getMpqPoint();
-        point_2t<mpq_class> f = v3->getMpqPoint();
-
-        mpq_class res1 =   (e.x - d.x) * (f.y - d.y)
-                        - (e.y - d.y) * (f.x - d.x);
-
-        int cres = cmp(res1, 0);
-
-        if(cres > 0)
-            return true;
-        else
-            return false;
-    }
-
     bool isEar(list<Vertex*> border, Vertex* v1, Vertex* v2, Vertex* v3)
     {
         lvi it = border.begin();
@@ -476,7 +439,7 @@ struct LinkedTriangleDcel : Dcel
                 it++;
                 continue;
             }
-            if(leftTurn(v1, v2, *it) && leftTurn(v2, v3, *it) && leftTurn(v3, v1, *it))
+            if(Vertex::leftTurn(v1, v2, *it) && Vertex::leftTurn(v2, v3, *it) && Vertex::leftTurn(v3, v1, *it))
                 return false;
             it++;
         }
@@ -736,7 +699,7 @@ struct LinkedTriangleDcel : Dcel
             if(it3 == border.end()) it3=border.begin();
             Vertex* v3 = *it3;
 
-            if(leftTurn(v1,v2,v3))
+            if(Vertex::leftTurn(v1,v2,v3))
             {
                 if(isEar(border, v1,v2,v3))
                 {

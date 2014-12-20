@@ -38,6 +38,7 @@ face.h
 orientation.h
 orientation3d.h
 line_wrapper.h
+triangle.h
 )
 
 SET(SOURCES viewer.cpp edge.cpp)
