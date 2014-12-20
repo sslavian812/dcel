@@ -3,6 +3,8 @@
 #include<vector>
 #include"edge.h"
 #include"vertex.h"
+#include <cg/primitives/point.h>
+using cg::point_2;
 
 #include <cg/primitives/segment.h>
 #include <cg/operations/has_intersection/segment_segment.h>
@@ -13,16 +15,11 @@ using cg::has_intersection;
 
 struct Triangle
 {
-    Vertex* v[3];
+     vector<Vertex*> v;
     Edge* e;
-    vector<Triangle*> successors;
 
-    Triangle(Vertex* v0, Vertex* v1, Vertex* v2, Edge* e): e(2)
-    {
-        v[0]=v1;
-        v[1]=v1;
-        v[2]=v2;
-    }
+    Triangle(vector<Vertex*> v, Edge* e): v(v), e(e)
+    {}
 
     bool intersects(Triangle* other)
     {
@@ -63,5 +60,17 @@ struct Triangle
         }
 
         return flag;
+    }
+
+    bool contains(point_2 p)
+    {
+        for(int i=0; i<3; ++i)
+        {
+            if(!Vertex::leftTurn(v[i], v[(i+1)%3]), p)
+            {
+                return false;
+            }
+        }
+        return true;
     }
 };

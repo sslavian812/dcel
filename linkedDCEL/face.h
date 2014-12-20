@@ -1,10 +1,16 @@
 #ifndef FACE_H
 #define FACE_H
 
+
+#include<vector>
+using std::vector;
+
 #include "edge.h"
+#include "vertex.h"
 
 
 struct Edge;
+struct Vertex;
 
 struct Face
 {
@@ -15,6 +21,9 @@ struct Face
 
     Face(Edge* edge): startEdge(edge)
     {}
+
+    vector<Vertex*> getVertices();
+    Edge* getStrongEdge();
 
 //    bool contains(point_2 p)
 //    {

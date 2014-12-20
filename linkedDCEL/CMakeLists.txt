@@ -39,9 +39,15 @@ orientation.h
 orientation3d.h
 line_wrapper.h
 triangle.h
+kirkpatrick.h
+node.h
 )
 
-SET(SOURCES viewer.cpp edge.cpp)
+SET(SOURCES
+viewer.cpp
+edge.cpp
+face.cpp
+)
 
 add_executable(${PROJECT} ${SOURCES} ${HEADERS})
 

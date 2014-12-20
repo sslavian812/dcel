@@ -1,4 +1,12 @@
-#ifndef NODE_H
-#define NODE_H
+#pragma once
 
-#endif // NODE_H
+#include <vector>
+using std::vector;
+
+#include "triangle.h"
+
+struct Node
+{
+    Triangle* triangle;
+    vector<Node*> successors;
+}
