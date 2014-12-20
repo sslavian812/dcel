@@ -5,11 +5,15 @@
 #include<cg/primitives/vector.h>
 #include<string>
 
+#include <boost/numeric/interval.hpp>
+#include <gmpxx.h>
+
 using std::string;
 
 using cg::point_2;
 using cg::point_2f;
 using cg::vector_2f;
+using cg::point_2t;
 
 struct Line
 {
@@ -119,6 +123,31 @@ struct Line
         double y = -(a*c2-a2*c)/(a*b2-a2*b);
         return point_2(x,y);
     }
+
+    typedef boost::numeric::interval_lib::unprotect<boost::numeric::interval<double> >::type interval;
+
+    point_2t<interval> getIntervalPoint(Line other)
+    {
+        boost::numeric::interval<double>::traits_type::rounding _;
+
+        interval a2 = interval(other.a);
+        interval b2 = interval(other.b);
+        interval c2 = interval(other.c);
+        interval x = -(c*b2-c2*b)/(a*b2-a2*b);
+        interval y = -(a*c2-a2*c)/(a*b2-a2*b);
+        return point_2t<interval>(x,y);
+    }
+
+    point_2t<mpq_class> getMpqPoint(Line other)
+    {
+        mpq_class a2 = mpq_class(other.a);
+        mpq_class b2 = mpq_class(other.b);
+        mpq_class c2 = mpq_class(other.c);
+        mpq_class x = -(c*b2-c2*b)/(a*b2-a2*b);
+        mpq_class y = -(a*c2-a2*c)/(a*b2-a2*b);
+        return point_2t<mpq_class>(x,y);
+    }
+
 
     double substitute(point_2 point)
     {
