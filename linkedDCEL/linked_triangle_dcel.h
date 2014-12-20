@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include<vector>
 #include<list>
@@ -222,9 +222,9 @@ struct LinkedTriangleDcel : Dcel
                 if(cur_edge->line == NULL)
                     tr_edges.push_back(cur_edge->getCoords(NULL));
                 else
-                  res_edges.push_back(cur_edge->getCoords(NULL));
-                cur_edge = cur_edge->next;
+                    res_edges.push_back(cur_edge->getCoords(NULL));
 
+                cur_edge = cur_edge->next;
             }while(cur_edge != start_edge);
          }
 
@@ -487,6 +487,8 @@ struct LinkedTriangleDcel : Dcel
     {
         Edge* e1 = new Edge(from, NULL);
         Edge* e2 = new Edge(to, NULL);
+        edges.push_back(e1);
+        edges.push_back(e2);
         e1->twin = e2;
         e2->twin = e1;
 
@@ -517,7 +519,7 @@ struct LinkedTriangleDcel : Dcel
         e2->incidentFace =smallface;
         cur_edge->incidentFace = smallface;
         cur_edge->next->incidentFace = smallface;
-
+        faces.push_back(smallface);
     }
 
     // :utils
@@ -773,7 +775,8 @@ struct LinkedTriangleDcel : Dcel
             used[cur_edge] = true;
             Edge* next_edge = cur_edge->next;
 
-            if(f!=0 && cg::orientation(point_2(0,0),
+            if(f!=0 && cur_edge->line != NULL && next_edge->line != NULL
+                    && cg::orientation(point_2(0,0),
                                cur_edge->line->getDirection(),
                                next_edge->line->getDirection()) != cg::CG_LEFT)
             {
@@ -834,6 +837,34 @@ struct LinkedTriangleDcel : Dcel
             std::cerr<<s<<": dcel is CORRECT!"<<std::endl;
         else
             std::cerr<<s<<": dcel is INCORRECT!"<<std::endl;
+        return res;
+    }
+
+    bool isTriangle(int f)
+    {
+        Face* face = faces[f];
+        Edge* start_edge = face->startEdge;
+        if(start_edge->next->next->next == start_edge)
+            return true;
+        else
+            return false;
+    }
+
+    bool triangleCheck()
+    {
+        bool res = true;
+        for(int i=1; i<faces.size(); ++i)
+        {
+            if( !isTriangle(i) )
+            {
+                std::cerr<<"face "<<i<<" is incorrect"<<std::endl;
+                res = false;
+            }
+        }
+        if(res)
+            std::cerr<<": dcel is Triangulated!"<<std::endl;
+        else
+            std::cerr<<": dcel is NOT triangulated!"<<std::endl;
         return res;
     }
 

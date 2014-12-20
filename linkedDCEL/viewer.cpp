@@ -172,6 +172,8 @@ struct sample_viewer : cg::visualization::viewer_adapter
         {
             LinkedTriangleDcel* d = reinterpret_cast<LinkedTriangleDcel*>(dcel_);
             d->triangulateDcel();
+            d->checkConsistensy("triangulation");
+            d->triangleCheck();
             return true;
         }
         return false;
