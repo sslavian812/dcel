@@ -1,0 +1,4 @@
+#ifndef KIRKPATRICK_H
+#define KIRKPATRICK_H
+
+#endif // KIRKPATRICK_H
