@@ -126,7 +126,7 @@ struct Line
 
     typedef boost::numeric::interval_lib::unprotect<boost::numeric::interval<double> >::type interval;
 
-    point_2t<interval> getIntervalPoint(Line other)
+    point_2t<interval> intervalIntersect(Line other)
     {
         boost::numeric::interval<double>::traits_type::rounding _;
 
@@ -138,7 +138,7 @@ struct Line
         return point_2t<interval>(x,y);
     }
 
-    point_2t<mpq_class> getMpqPoint(Line other)
+    point_2t<mpq_class> mpqIntersect(Line other)
     {
         mpq_class a2 = mpq_class(other.a);
         mpq_class b2 = mpq_class(other.b);

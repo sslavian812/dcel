@@ -406,7 +406,20 @@ struct LinkedTriangleDcel : Dcel
         return NULL; // sometimes reachable, but I don't know why
     }
 
+    typedef list<Vertex*>::iterator lvi;
 
+    lvi cunstructBorder(Face* face)
+    {
+        Edge* cur_edge = face->startEdge;
+        Edge* start_edge = cur_edge;
+        lvi l;
+        do
+        {
+            l.insert(l.end(),cur_edge->origin);
+            cur_edge = cur_edge->next;
+        }while(cur_edge != start_edge);
+        return l;
+    }
 
     // :utils
     //-----------------------------------------------------------------
@@ -603,6 +616,36 @@ struct LinkedTriangleDcel : Dcel
         return checkConsistensy("vertex deleted");
     }
 
+
+    void triangulateFace(Face* face)
+    {
+        list<Vertex*> border = constructBorder(face);
+        int border_size = border.size();
+
+        lvi it=border.begin();
+        lvi it2;
+        lvi it3;
+        while(border_size > 3)
+        {
+            it2 = it;
+            Vertex* v1,v2,v3;
+            v1 = *it2; ++it2;
+            if(it2 == border.end()) it2=border.begin();
+            it3=it2;
+            v2 = *it3; ++it3;
+            if(it3 == border.end()) it3=border.begin();
+            v3 = *it3;
+
+            if(leftTurn(v1,v2,v3))
+            {
+                if(isEar(border, v1,v2,v3))
+                {
+                    curEar(border, it1, it2, it3);
+                }
+            }
+        }
+    }
+
     // :interface
     //----------------------------------------------------------------
     // checkers:
@@ -689,49 +732,8 @@ struct LinkedTriangleDcel : Dcel
         return res;
     }
 
-
     // :checkers
-
-//    list<int> cunstructBorder(int face)
-//    {
-//        int cur_edge = faces[face].startEdge;
-//        int start_edge = cur_edge;
-//        list<int> l;
-//        do
-//        {
-//            l.insert(l.end(),edges[cur_edge].origin);
-//            cur_edge = edges[cur_edge].next;
-//        }while(cur_edge != start_edge);
-//        return l;
-//    }
-
-//    void triangulate(int face)
-//    {
-//        list<int> dcvl = constructBorder(face);
-//        list<int>::iterator it=dcvl.begin();
-//        list<int>::iterator it2;
-//        list<int>::iterator it3;
-//        while(dcvl.size() > 3)
-//        {
-//            it2 = it;
-//            int v1,v2,v3;
-//            v1 = *it2; ++it2;
-//            if(it2 == dcvl.end()) it2=dcvl.begin();
-//            it3=it2;
-//            v2 = *it3; ++it3;
-//            if(it3 == dcvl.end()) it3=dcvl.begin();
-//            v3 = *it3;
-
-//            if(leftTurn(v1,v2,v3))
-//            {
-//                if(isEar(dcvl, v1,v2,v3))
-//                {
-//                    curEar(dcvl, it1, it2, it3);
-//                }
-//            }
-//        }
-//    }
-
-
 };
+
+
 

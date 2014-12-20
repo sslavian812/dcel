@@ -5,10 +5,15 @@
 #include "line.h"
 #include <cg/primitives/point.h>
 
+#include <boost/numeric/interval.hpp>
+#include <gmpxx.h>
+
+
 
 struct Edge;
 
 using cg::point_2;
+using cg::point_2t;
 
 struct Vertex
 {
@@ -41,6 +46,22 @@ struct Vertex
 
     point_2 getPoint() const
     {return point;}
+
+    typedef boost::numeric::interval_lib::unprotect<boost::numeric::interval<double> >::type interval;
+
+    point_2t<interval> getIntervalPoint()
+    {
+        boost::numeric::interval<double>::traits_type::rounding _;
+
+        point_2t<interval> p = line1->intervalIntersect(line2);
+        return p;
+    }
+
+    point_2t<mpq_class> getMpqPoint(Line other)
+    {
+        point_2t<mpq_class> p = line1->mpqIntersect(line2);
+        return p;
+    }
 };
 
 #endif // VERTEX_H
