@@ -504,12 +504,104 @@ struct LinkedTriangleDcel : Dcel
 //                v->isOnBorder = true;
                 break;
             }
-        }
-
-        checkConsistensy("line added");
-        return true;
+        }   
+        return checkConsistensy("line added");
     }
 
+    bool deleteVertex(Vertex* v)
+    {
+        Edge* cur_edge = v->incidentEdge;
+        Edge* start_edge = cur_edge;
+
+        Face* face = NULL; // new face
+        Edge* edge = NULL; // it's start edge
+
+        Edge* border_edge_in = NULL;
+        Edge* border_edge_out = NULL;
+
+        vector<Edge*> to_clear_edges;
+
+        do
+        {
+            if(cur_edge->incidentFace == outer_face)
+            {
+                border_edge_out = cur_edge;
+            }
+            else if(cur_edge->twin->incidentFace == outer_face)
+            {
+                border_edge_in = cur_edge;
+            }
+            else
+            {
+                cur_edge->next->prev = cur_edge->twin->prev;
+                cur_edge->twin->prev->next = cur_edge->next;
+                if(face == NULL)
+                {
+                    edge = cur_edge->next;
+                    face = cur_edge->next->incidentFace;
+                }
+                to_clear_edges.push_back(cur_edge->twin);
+                to_clear_edges.push_back(cur_edge);
+            }
+            cur_edge = cur_edge->twin->next;
+        }while(cur_edge != start_edge);
+
+        if(border_edge_in != NULL) // border_edge_out is also not NULL
+        {
+            Vertex* inner_next = border_edge_out->prev->origin;
+            Vertex* inner_prev = border_edge_out->twin->origin;
+
+            border_edge_in->origin = inner_prev;
+            border_edge_out->twin->prev->next = border_edge_in;
+            border_edge_in->prev = border_edge_out->twin->prev;
+
+            border_edge_out->origin = inner_next;
+            border_edge_out->prev->prev->next = border_edge_out;
+            border_edge_out->prev = border_edge_out->prev->prev;
+
+            to_clear_edges.push_back(border_edge_in->twin);
+            to_clear_edges.push_back(border_edge_out->twin);
+            border_edge_in->twin = border_edge_out;
+            border_edge_out->twin = border_edge_in;
+        }
+
+        for(int i=0; i<to_clear_edges.size(); ++i)
+        {
+            //remove
+            edges.erase(std::remove(edges.begin(), edges.end(), to_clear_edges[i]), edges.end());
+            delete to_clear_edges[i];
+        }
+
+        vector<Face*> to_clear_faces;
+
+        if(face!= NULL) // face-relaxation needed
+        {
+            face->startEdge = edge;
+            Edge* cur = edge;
+            do
+            {
+                if(cur->incidentFace != face)
+                {
+                    to_clear_faces.push_back(cur->incidentFace);
+                    cur->incidentFace = face;
+                }
+                cur = cur->next;
+            }while(edge!=cur);
+        }
+
+        faces.erase(std::unique(faces.begin(), faces.end()), faces.end());
+        for(int i=0; i<to_clear_faces.size(); ++i)
+        {
+            //remove
+            faces.erase(std::remove(faces.begin(), faces.end(), to_clear_faces[i]), faces.end());
+             to_clear_faces[i];
+        }
+
+       // remove
+        vertices.erase(std::remove(vertices.begin(), vertices.end(), v), vertices.end());
+        delete v;
+        return checkConsistensy("vertex deleted");
+    }
 
     // :interface
     //----------------------------------------------------------------

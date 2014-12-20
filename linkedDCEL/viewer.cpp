@@ -163,6 +163,12 @@ struct sample_viewer : cg::visualization::viewer_adapter
             localization_mode_ = false;
             actual_face_ = {};
         }
+        if(key_code == Qt::Key_C)
+        {
+            LinkedTriangleDcel* d = reinterpret_cast<LinkedTriangleDcel*>(dcel_);
+            d->deleteVertex(d->vertices.back());
+            return true;
+        }
         return false;
     }
 
