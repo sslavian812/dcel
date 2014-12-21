@@ -46,6 +46,7 @@ SET(SOURCES
 viewer.cpp
 edge.cpp
 face.cpp
+triangle.cpp
 )
 
 add_executable(${PROJECT} ${SOURCES} ${HEADERS})
