@@ -79,6 +79,12 @@ struct sample_viewer : cg::visualization::viewer_adapter
             }
 
         }
+
+        drawer.set_color(Qt::white);
+        if(picked_)
+        {
+            drawer.draw_point(picked_.get(), 4);
+        }
     }
 
     void print(cg::visualization::printer_type & p) const
@@ -192,14 +198,15 @@ struct sample_viewer : cg::visualization::viewer_adapter
         if(key_code == Qt::Key_C) // new feature
         {
             LinkedTriangleDcel* d = reinterpret_cast<LinkedTriangleDcel*>(dcel_);
-            d->triangulateDcel();
-            d->checkConsistensy("triangulation");
-            d->triangleCheck();
-            std::cout<<"dcel triangulated"<<endl;
+//            d->triangulateDcel();
+//            d->checkConsistensy("triangulation");
+//            d->triangleCheck();
+//            std::cout<<"dcel triangulated"<<endl;
 
-//            Kirkpatrick* T = new Kirkpatrick(d);
-//            Triangle * t = T->localize(point_2(0.0, 0.0));
-//            triangle_ = t;
+            Kirkpatrick* T = new Kirkpatrick(d);
+            picked_ = point_2(0.0, 0.0);
+            Triangle * t = T->localize(picked_.get());
+            triangle_ = t;
             return true;
         }
 
@@ -211,6 +218,8 @@ struct sample_viewer : cg::visualization::viewer_adapter
     Dcel* dcel_;
 private:
     std::vector<Line> lines_;
+
+    boost::optional<point_2> picked_;
 
     boost::optional<point_2f> current_point_;
     boost::optional<point_2f> normal_point_;
