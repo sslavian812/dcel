@@ -586,7 +586,7 @@ struct LinkedTriangleDcel : Dcel
         return checkConsistensy("line added");
     }
 
-    bool deleteVertex(Vertex* v)
+    Face* deleteVertex(Vertex* v)
     {
         Edge* cur_edge = v->incidentEdge;
         Edge* start_edge = cur_edge;
@@ -618,8 +618,12 @@ struct LinkedTriangleDcel : Dcel
                     edge = cur_edge->next;
                     face = cur_edge->next->incidentFace;
                 }
+                // updating adjacent vertex because of deleting incident edge
+                cur_edge->twin->origin->incidentEdge = cur_edge->next;
+
                 to_clear_edges.push_back(cur_edge->twin);
                 to_clear_edges.push_back(cur_edge);
+
             }
             cur_edge = cur_edge->twin->next;
         }while(cur_edge != start_edge);
@@ -629,18 +633,26 @@ struct LinkedTriangleDcel : Dcel
             Vertex* inner_next = border_edge_out->prev->origin;
             Vertex* inner_prev = border_edge_out->twin->origin;
 
+            if(border_edge_out->prev->incidentFace == outer_face)
+                outer_face->startEdge = border_edge_out;
+
             border_edge_in->origin = inner_prev;
             border_edge_out->twin->prev->next = border_edge_in;
             border_edge_in->prev = border_edge_out->twin->prev;
+            inner_prev->incidentEdge = border_edge_in;
 
             border_edge_out->origin = inner_next;
             border_edge_out->prev->prev->next = border_edge_out;
             border_edge_out->prev = border_edge_out->prev->prev;
+            inner_next->incidentEdge = border_edge_out;
+
 
             to_clear_edges.push_back(border_edge_in->twin);
             to_clear_edges.push_back(border_edge_out->twin);
             border_edge_in->twin = border_edge_out;
             border_edge_out->twin = border_edge_in;
+
+
         }
 
         for(int i=0; i<to_clear_edges.size(); ++i)
@@ -678,11 +690,13 @@ struct LinkedTriangleDcel : Dcel
         //remove
         vertices.erase(std::remove(vertices.begin(), vertices.end(), v), vertices.end());
 //leek!        delete v;
-        return checkConsistensy("vertex deleted");
+        return face;
+        //return checkConsistensy("vertex deleted");
     }
 
+
     // отдает вектор фейсов-треугольников
-    vector<Face*> triangulateFace(Face* face)
+    vector<Triangle*> triangulateFace(Face* face)
     {
         vector<Face*> fs;
         fs.push_back(face);
@@ -712,22 +726,38 @@ struct LinkedTriangleDcel : Dcel
                     fs.push_back(addEdge(v1, v3, face)); // отдает новый фейс
                 }
             }
+            else
+            {
+                ++it1;
+            }
         }
-        return fs;
+
+        vector<Triangle*> res;
+        for(int i=0; i<fs.size(); ++i)
+        {
+//leek!                // never deleted!
+            fs[i]->triangle = new Triangle(fs[i]->getVertices(), fs[i]->getStrongEdge());
+            res.push_back(fs[i]->triangle);
+        }
+
+        // are strongEdges even strong?
+        return res;
     }
 
     void triangulateDcel()
     {
         for(int i=1; i<faces.size(); ++i)
         {
-            vector<Face*> newFaces = triangulateFace(faces[i]);
-            for(int i=0; i<newFaces.size(); ++i)
-            {
-//leek!                // never deleted!
-                newFaces[i]->triangle = new Triangle(newFaces[i]->getVertices(), newFaces[i]->getStrongEdge());
-            }
+            triangulateFace(faces[i]);
+//            for(int i=0; i<newFaces.size(); ++i)
+//            {
+// //leek!                // never deleted!
+//                newFaces[i]->triangle = new Triangle(newFaces[i]->getVertices(), newFaces[i]->getStrongEdge());
+//            }
         }
     }
+
+
     // :interface
     //----------------------------------------------------------------
     // checkers:
@@ -808,6 +838,16 @@ struct LinkedTriangleDcel : Dcel
                 res = false;
             }
         }
+
+        for(int i=0; i<vertices.size(); ++i)
+        {
+            if(vertices[i]->incidentEdge == NULL ||
+                    std::find(edges.begin(), edges.end(), vertices[i]->incidentEdge) == edges.end())
+            {
+                std::cerr<<"warning: vertices["<<i<<"]->incidentEdge doesn't present"<<std::endl;
+            }
+        }
+
         if(res)
             std::cerr<<s<<": dcel is CORRECT!"<<std::endl;
         else
