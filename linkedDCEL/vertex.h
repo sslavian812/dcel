@@ -99,6 +99,8 @@ struct Vertex
             return false;
     }
 
+
+
     static bool leftTurn(Vertex* v1, Vertex* v2, point_2 p)
     {
         //interval
@@ -131,6 +133,44 @@ struct Vertex
 
         if(cres > 0)
             return true;
+        else
+            return false;
+    }
+
+    static bool rightTurn(Vertex* v1, Vertex* v2, point_2 p)
+    {
+        //interval
+        boost::numeric::interval<double>::traits_type::rounding _;
+
+        point_2t<interval> a = v1->getIntervalPoint();
+        point_2t<interval> b = v2->getIntervalPoint();
+        point_2t<interval> c(interval(p.x), interval(p.y));
+
+        interval res =   (b.x - a.x) * (c.y - a.y)
+                       - (b.y - a.y) * (c.x - a.x);
+
+        if (res.lower() > 0)
+           return false; // left
+        if (res.upper() < 0)
+           return true; // right
+        if (res.upper() == res.lower())
+           return false; // collinear
+
+        // rational
+
+        point_2t<mpq_class> d = v1->getMpqPoint();
+        point_2t<mpq_class> e = v2->getMpqPoint();
+        point_2t<mpq_class> f(mpq_class(p.x), mpq_class(p.y));;
+
+        mpq_class res1 =   (e.x - d.x) * (f.y - d.y)
+                        - (e.y - d.y) * (f.x - d.x);
+
+        int cres = cmp(res1, 0);
+
+        if(cres > 0)
+            return false; // left
+        if(cres < 0)
+            return true; // right
         else
             return false;
     }

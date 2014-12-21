@@ -414,77 +414,12 @@ struct LinkedTriangleDcel : Dcel
         return NULL; // sometimes reachable, but I don't know why
     }
 
+
+
     typedef list<Vertex*>::iterator lvi;
-
-    list<Vertex*> constructBorder(Face* face)
-    {
-        Edge* cur_edge = face->startEdge;
-        Edge* start_edge = cur_edge;
-        list<Vertex*> l;
-        do
-        {
-            l.insert(l.end(),cur_edge->origin);
-            cur_edge = cur_edge->next;
-        }while(cur_edge != start_edge);
-        return l;
-    }
-
-    bool isEar(list<Vertex*> border, Vertex* v1, Vertex* v2, Vertex* v3)
-    {
-        lvi it = border.begin();
-        while(it != border.end())
-        {
-            if(*it == v1 || *it == v2 || *it == v3)
-            {
-                it++;
-                continue;
-            }
-            if(Vertex::leftTurn(v1, v2, *it) && Vertex::leftTurn(v2, v3, *it) && Vertex::leftTurn(v3, v1, *it))
-                return false;
-            it++;
-        }
-        return true;
-    }
-
-    Face* addEdge(Vertex* from, Vertex* to, Face* bigface)
-    {
-        Edge* e1 = new Edge(from, NULL);
-        Edge* e2 = new Edge(to, NULL);
-        edges.push_back(e1);
-        edges.push_back(e2);
-        e1->twin = e2;
-        e2->twin = e1;
-
-        Edge* cur_edge = bigface->startEdge;
-
-        while(cur_edge->origin != from)
-            cur_edge = cur_edge->next;
-
-//        if(cur_edge->next->next->origin != to)
-//        {
-//            std::cerr<<"IMPOSSIBLE!!!"<<std::endl;
-//        }
-
-        e2->next = cur_edge;
-        e2->prev = cur_edge->next;
-        e1->next = cur_edge->next->next;
-        e1->prev = cur_edge->prev;
-
-        cur_edge->prev->next = e1;
-        e1->next->prev = e1;
-        cur_edge->prev = e2;
-        cur_edge->next->next = e2;
-
-        bigface->startEdge = e1;
-        e1->incidentFace = bigface;
-
-        Face* smallface = new Face(e2);
-        e2->incidentFace =smallface;
-        cur_edge->incidentFace = smallface;
-        cur_edge->next->incidentFace = smallface;
-        faces.push_back(smallface);
-        return smallface;
-    }
+    list<Vertex*> constructBorder(Face* face);
+    bool isEar(list<Vertex*> border, Vertex* v1, Vertex* v2, Vertex* v3);
+    Face* addEdge(Vertex* from, Vertex* to, Face* bigface);
 
     // :utils
     //-----------------------------------------------------------------
@@ -585,6 +520,7 @@ struct LinkedTriangleDcel : Dcel
         }   
         return checkConsistensy("line added");
     }
+
 
     Face* deleteVertex(Vertex* v)
     {
@@ -696,192 +632,17 @@ struct LinkedTriangleDcel : Dcel
 
 
     // отдает вектор фейсов-треугольников
-    vector<Triangle*> triangulateFace(Face* face)
-    {
-        vector<Face*> fs;
-        fs.push_back(face);
-        list<Vertex*> border = constructBorder(face);
-        int border_size = border.size();
-
-        lvi it1=border.begin();
-        lvi it2;
-        lvi it3;
-        while(border_size > 3)
-        {
-            it2 = it1;
-
-            Vertex* v1 = *it2; ++it2;
-            if(it2 == border.end()) it2=border.begin();
-            it3=it2;
-            Vertex* v2 = *it3; ++it3;
-            if(it3 == border.end()) it3=border.begin();
-            Vertex* v3 = *it3;
-
-            if(Vertex::leftTurn(v1,v2,v3))
-            {
-                if(isEar(border, v1,v2,v3))
-                {
-                    border.erase(it2);
-                    border_size--;
-                    fs.push_back(addEdge(v1, v3, face)); // отдает новый фейс
-                }
-            }
-            else
-            {
-                ++it1;
-            }
-        }
-
-        vector<Triangle*> res;
-        for(int i=0; i<fs.size(); ++i)
-        {
-//leek!                // never deleted!
-            fs[i]->triangle = new Triangle(fs[i]->getVertices(), fs[i]->getStrongEdge());
-            res.push_back(fs[i]->triangle);
-        }
-
-        // are strongEdges even strong?
-        return res;
-    }
-
-    void triangulateDcel()
-    {
-        for(int i=1; i<faces.size(); ++i)
-        {
-            triangulateFace(faces[i]);
-//            for(int i=0; i<newFaces.size(); ++i)
-//            {
-// //leek!                // never deleted!
-//                newFaces[i]->triangle = new Triangle(newFaces[i]->getVertices(), newFaces[i]->getStrongEdge());
-//            }
-        }
-    }
-
+    vector<Triangle*> triangulateFace(Face* face);
+    void triangulateDcel();
 
     // :interface
     //----------------------------------------------------------------
     // checkers:
-
-    bool traverseFace(int f)
-    {
-        Face* face = faces[f];
-        Edge* start_edge = face->startEdge;
-        Edge* cur_edge = start_edge->next;
-
-        int k = 0;
-        int max = 10000;
-
-        map<Edge*, bool> used;
-
-        bool res = true;
-
-        while(cur_edge != start_edge)
-        {
-            used[cur_edge] = true;
-            Edge* next_edge = cur_edge->next;
-
-            if(f!=0 && cur_edge->line != NULL && next_edge->line != NULL
-                    && cg::orientation(point_2(0,0),
-                               cur_edge->line->getDirection(),
-                               next_edge->line->getDirection()) != cg::CG_LEFT)
-            {
-                cerr<<"edge "<<cur_edge<<" int face "<<f<<" has incorrect TURN!!"<<endl;
-                res = false;
-            }
-
-
-            if(cur_edge->incidentFace != face)
-            {
-                cerr<<"edge "<<cur_edge<<" has incorrect associated face"<<endl;
-                res = false;
-            }
-
-            if(used[next_edge] == true)
-            {
-                cerr<<"edge "<<next_edge<<" has been visited twice in face "<<f<<endl;
-                res = false;
-            }
-
-            if(next_edge == NULL )
-            {
-                cerr<<"edge "<<cur_edge<<" is invalid and has NULL as it's next"<<endl;
-                return false;
-            }
-
-            if(k>=max)
-            {
-                cerr<<"face "<<f<<"has more than "<<max<<"edges "<<endl;
-                return false;
-            }
-
-            if(next_edge->prev != cur_edge)
-            {
-                cerr<<"edge "<<next_edge<<" has incorrect prev pointer "<<next_edge->prev<<" instead of "<<cur_edge<<endl;
-                return false;
-            }
-            cur_edge = next_edge;
-            ++k;
-        }
-        if(!res)
-            cerr<<"ended checking face "<<f<<": "<<endl<<endl;
-        return res;
-    }
-
-    bool checkConsistensy(string s)
-    {
-        bool res = true;
-        for(int i=0; i<faces.size(); ++i)
-        {
-            if( !traverseFace(i) )
-            {
-                std::cerr<<"face "<<i<<" is incorrect"<<std::endl;
-                res = false;
-            }
-        }
-
-        for(int i=0; i<vertices.size(); ++i)
-        {
-            if(vertices[i]->incidentEdge == NULL ||
-                    std::find(edges.begin(), edges.end(), vertices[i]->incidentEdge) == edges.end())
-            {
-                std::cerr<<"warning: vertices["<<i<<"]->incidentEdge doesn't present"<<std::endl;
-            }
-        }
-
-        if(res)
-            std::cerr<<s<<": dcel is CORRECT!"<<std::endl;
-        else
-            std::cerr<<s<<": dcel is INCORRECT!"<<std::endl;
-        return res;
-    }
-
-    bool isTriangle(int f)
-    {
-        Face* face = faces[f];
-        Edge* start_edge = face->startEdge;
-        if(start_edge->next->next->next == start_edge)
-            return true;
-        else
-            return false;
-    }
-
-    bool triangleCheck()
-    {
-        bool res = true;
-        for(int i=1; i<faces.size(); ++i)
-        {
-            if( !isTriangle(i) )
-            {
-                std::cerr<<"face "<<i<<" is incorrect"<<std::endl;
-                res = false;
-            }
-        }
-        if(res)
-            std::cerr<<": dcel is Triangulated!"<<std::endl;
-        else
-            std::cerr<<": dcel is NOT triangulated!"<<std::endl;
-        return res;
-    }
+    bool traverseFace(int f);
+    bool checkConsistensy(string s);
+    bool isTriangle(int f);
+    bool triangleCheck();
+    bool isNonCollinear(int f);
 
     // :checkers
 };

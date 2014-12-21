@@ -25,8 +25,8 @@ bool Triangle::intersects(Triangle* other)
             // rational calculations of double point, then checking intersection (double, interval, ratinal)
             // some accuracy lost, but it worth
 
-            point_2 p1(other->v[i]->getMpqPoint().x.get_d(), other->v[i]->getMpqPoint().y.get_d());
-            point_2 p2(other->v[(i+1)%3]->getMpqPoint().x.get_d(), other->v[(i+1)%3]->getMpqPoint().y.get_d());
+            point_2 p1(v[i]->getMpqPoint().x.get_d(), v[i]->getMpqPoint().y.get_d());
+            point_2 p2(v[(i+1)%3]->getMpqPoint().x.get_d(), v[(i+1)%3]->getMpqPoint().y.get_d());
 
             point_2 p3(other->v[j]->getMpqPoint().x.get_d(), other->v[j]->getMpqPoint().y.get_d());
             point_2 p4(other->v[(j+1)%3]->getMpqPoint().x.get_d(), other->v[(j+1)%3]->getMpqPoint().y.get_d());

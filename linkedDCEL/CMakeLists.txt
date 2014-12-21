@@ -47,6 +47,8 @@ viewer.cpp
 edge.cpp
 face.cpp
 triangle.cpp
+dcel_triangulation.cpp
+dcel_checker.cpp
 )
 
 add_executable(${PROJECT} ${SOURCES} ${HEADERS})

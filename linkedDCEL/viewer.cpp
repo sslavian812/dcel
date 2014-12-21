@@ -14,6 +14,9 @@
 #include "linked_triangle_dcel.h"
 
 
+#include "kirkpatrick.h"
+
+
 using cg::point_2f;
 using std::pair;
 using std::vector;
@@ -64,6 +67,17 @@ struct sample_viewer : cg::visualization::viewer_adapter
             Line cur = current_line_.get();
             drawer.set_color(Qt::green);
             drawer.draw_line(cur.getSegment().first, cur.getSegment().second);
+        }
+
+        drawer.set_color(Qt::yellow);
+
+        if(triangle_)
+        {
+            for(int i=0; i<3; ++i)
+            {
+                drawer.draw_point(triangle_.get()->v[i]->getPoint(), 4);
+            }
+
         }
     }
 
@@ -133,7 +147,7 @@ struct sample_viewer : cg::visualization::viewer_adapter
 
     bool on_key(int key_code)
     {
-        if(key_code == Qt::Key_T)
+        if(key_code == Qt::Key_T) // triangleDcel
         {
             Line l1,l2,l3;
             dcel_->getBounds(l1, l2, l3);
@@ -151,31 +165,45 @@ struct sample_viewer : cg::visualization::viewer_adapter
 
             return true;
         }
-
-        if(key_code == Qt::Key_I)
+        if(key_code == Qt::Key_I) // invalidate
         {
             dcel_ = new LinkedInfiniteDcel();
             lines_.resize(0);
             return true;
         }
-        if(key_code == Qt::Key_L)
+        if(key_code == Qt::Key_L) // localize
         {
             localization_mode_ = true;
             return true;
         }
-        if(key_code == Qt::Key_A)
+        if(key_code == Qt::Key_A) // add (line)
         {
             localization_mode_ = false;
             actual_face_ = {};
         }
-        if(key_code == Qt::Key_C)
+        if(key_code == Qt::Key_D) // delete
+        {
+            LinkedTriangleDcel* d = reinterpret_cast<LinkedTriangleDcel*>(dcel_);
+            d->deleteVertex(d->vertices[3]);
+            std::cout<<"vertex deleted"<<endl;
+            d->checkConsistensy("deletion");
+            return true;
+        }
+        if(key_code == Qt::Key_C) // new feature
         {
             LinkedTriangleDcel* d = reinterpret_cast<LinkedTriangleDcel*>(dcel_);
             d->triangulateDcel();
             d->checkConsistensy("triangulation");
             d->triangleCheck();
+            std::cout<<"dcel triangulated"<<endl;
+
+//            Kirkpatrick* T = new Kirkpatrick(d);
+//            Triangle * t = T->localize(point_2(0.0, 0.0));
+//            triangle_ = t;
             return true;
         }
+
+
         return false;
     }
 
@@ -187,6 +215,7 @@ private:
     boost::optional<point_2f> current_point_;
     boost::optional<point_2f> normal_point_;
     boost::optional<Line> current_line_;
+    boost::optional<Triangle*> triangle_;
 
     std::vector<pair<point_2, point_2> > actual_face_; // vector of segments
 
