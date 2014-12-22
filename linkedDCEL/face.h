@@ -24,28 +24,12 @@ struct Face
     Face(Edge* edge): startEdge(edge), triangle(NULL)
     {}
 
-    Face(const Face & other): startEdge(other.startEdge), triangle(NULL)
+    Face(const Face & other): startEdge(other.startEdge), triangle(other.triangle)
     {}
 
     vector<Vertex*> getVertices();
     Edge* getStrongEdge();
     vector<pair<point_2, point_2> > getEdgesToDraw();
-
-//    bool contains(point_2 p)
-//    {
-//        Edge* cur = startEdge;
-//        do
-//        {
-//            if(cg::orientation(point_2(0,0),
-//                               cur->line->getDirection(),
-//                               point_2(p.x-cur->origin->getPoint().x, p.y-cur->origin->getPoint().y)) == cg::CG_RIGHT)
-//            {
-//                return false;
-//            }
-//            cur = cur->next;
-//        }while(cur != startEdge);
-//        return true;
-//    }
 };
 
 #endif // FACE_H

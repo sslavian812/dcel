@@ -70,15 +70,6 @@ struct sample_viewer : cg::visualization::viewer_adapter
 
         drawer.set_color(Qt::yellow);
 
-        if(triangle_)
-        {
-            for(int i=0; i<3; ++i)
-            {
-                drawer.draw_point(triangle_.get()->v[i]->getPoint(), 4);
-            }
-
-        }
-
         drawer.set_color(Qt::white);
         if(picked_)
         {
@@ -90,7 +81,8 @@ struct sample_viewer : cg::visualization::viewer_adapter
     {
         p.corner_stream() << "press lbutton to fix a point on line" << cg::visualization::endl
                         << "move mouse to specify line's normal vector" << cg::visualization::endl
-                        << "lines count: " <<lines_.size() << cg::visualization::endl;
+                        << "lines count: " <<lines_.size() << cg::visualization::endl
+                        << "controls: I, T, <-, ->"<< cg::visualization::endl;
     }
 
 
@@ -184,7 +176,7 @@ struct sample_viewer : cg::visualization::viewer_adapter
             lines_.resize(0);
             return true;
         }
-        if(key_code == Qt::Key_L) // localization mode
+        if(key_code == Qt::Key_L) // localization mode ON
         {
             localization_mode_ = true;
 
@@ -197,49 +189,6 @@ struct sample_viewer : cg::visualization::viewer_adapter
             T_ = new Kirkpatrick(d);
             return true;
         }
-
-//        if(key_code == Qt::Key_D) // delete
-//        {
-//            LinkedTriangleDcel* d = reinterpret_cast<LinkedTriangleDcel*>(dcel_);
-//            d->deleteVertex(d->vertices.back());
-//            std::cout<<"vertex deleted"<<endl;
-//            d->checkConsistensy("deletion");
-//            return true;
-//        }
-
-//        if(key_code == Qt::Key_K) // kirkpatrick
-//        {
-//            LinkedTriangleDcel* d = reinterpret_cast<LinkedTriangleDcel*>(dcel_);
-
-
-//            Kirkpatrick* T = new Kirkpatrick(d);
-//            picked_ = point_2(0.0, 0.0);
-//            Triangle * t = T->localize(picked_.get());
-//            triangle_ = t;
-//            return true;
-//        }
-//        if(key_code == Qt::Key_C) // copy
-//        {
-//            LinkedTriangleDcel* d = reinterpret_cast<LinkedTriangleDcel*>(dcel_);
-//            LinkedTriangleDcel* copy = new LinkedTriangleDcel(*d);
-//            old_ = dcel_;
-//            dcel_ = copy;
-//            return true;
-//        }
-//        if(key_code == Qt::Key_S) // swap
-//        {
-//            std::swap(old_, dcel_);
-//            return true;
-//        }
-//        if(key_code == Qt::Key_F) // swap
-//        {
-//            LinkedTriangleDcel* d = reinterpret_cast<LinkedTriangleDcel*>(dcel_);
-//            d->triangulateDcel();
-//            d->checkConsistensy("triangulation");
-//            d->triangleCheck();
-//            std::cout<<"dcel triangulated"<<endl;
-//            return true;
-//        }
 
         if(key_code == Qt::Key_Left) //decrease level
         {
@@ -275,8 +224,6 @@ private:
     boost::optional<point_2f> current_point_;
     boost::optional<point_2f> normal_point_;
     boost::optional<Line> current_line_;
-
-    boost::optional<Triangle*> triangle_; // ???
 
     std::vector<pair<point_2, point_2> > actual_face_; // vector of segments - localization of a point
 

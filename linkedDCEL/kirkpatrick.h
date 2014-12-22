@@ -56,11 +56,14 @@ struct Kirkpatrick
         }
 
 
-        dcel = new LinkedTriangleDcel(*dcel); // make a copy
+        //dcel = new LinkedTriangleDcel(*dcel); // make a copy
 
-        // now the main part: removing vertices and construction
+        // the main part: removing vertices and construction
         while(true)
-        {
+        {  
+            dcel = new LinkedTriangleDcel(*dcel); // make a copy
+            levels.push_back(dcel);
+
             if(dcel->vertices.size()==3)
                 break;
 
@@ -124,11 +127,9 @@ struct Kirkpatrick
                 Triangle* triangle = dcel->faces[i]->triangle;
                 lauers[lauers.size()-1].push_back(triangle);
             }
-
-            levels.push_back(dcel);
-            dcel = new LinkedTriangleDcel(*dcel); // make a copy
         }
 
+        //dcel->triangulateDcel();
         root = dcel->faces[1]->triangle;
     }
 
@@ -156,11 +157,12 @@ struct Kirkpatrick
 
     LinkedTriangleDcel* getLevel(int l)
     {
-        if(l >= levels.size() || l < 0)
-            return NULL;  // impossible but let it be
+        if(l >= levels.size() || l < 0)    // extra defence
+            return NULL;
         else
             return levels[l];
     }
+
     int getMaxLevel()
     {
         return levels.size()-1;
