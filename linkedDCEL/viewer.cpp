@@ -30,7 +30,6 @@ struct sample_viewer : cg::visualization::viewer_adapter
 
     void draw(cg::visualization::drawer_type & drawer) const
     {
-
         vector<point_2> res_vertices;
         vector<pair<point_2, point_2> > res_edges;
         vector<pair<point_2, point_2> > tr_edges;
@@ -97,6 +96,9 @@ struct sample_viewer : cg::visualization::viewer_adapter
 
     bool on_press(const point_2f & p)
     {
+        if(localization_mode_)
+            return true;
+
         if (current_point_)
             return false;
 
@@ -108,13 +110,15 @@ struct sample_viewer : cg::visualization::viewer_adapter
     {
         if(localization_mode_)
         {
+            picked_ = p;
             actual_face_.resize(0);
-            dcel_->localize(p, actual_face_);
-            current_point_.reset();
-            normal_point_.reset();
-            current_line_.reset();
+            Face* f = T_->localize(p);
+
+            actual_face_ = f->getEdgesToDraw();
+
             return true;
         }
+        //------------------------------------------
 
         if (!current_point_)
             return false;
@@ -138,6 +142,9 @@ struct sample_viewer : cg::visualization::viewer_adapter
 
     bool on_move(const point_2f & p)
     {
+        if(localization_mode_)
+            return true;
+
         if (!current_point_)
             return false;
 
@@ -177,65 +184,89 @@ struct sample_viewer : cg::visualization::viewer_adapter
             lines_.resize(0);
             return true;
         }
-        if(key_code == Qt::Key_L) // localize
+        if(key_code == Qt::Key_L) // localization mode
         {
             localization_mode_ = true;
-            return true;
-        }
-        if(key_code == Qt::Key_A) // add (line)
-        {
-            localization_mode_ = false;
-            actual_face_ = {};
-        }
-        if(key_code == Qt::Key_D) // delete
-        {
-            LinkedTriangleDcel* d = reinterpret_cast<LinkedTriangleDcel*>(dcel_);
-            d->deleteVertex(d->vertices.back());
-            std::cout<<"vertex deleted"<<endl;
-            d->checkConsistensy("deletion");
-            return true;
-        }
-        if(key_code == Qt::Key_K) // kirkpatrick
-        {
-            LinkedTriangleDcel* d = reinterpret_cast<LinkedTriangleDcel*>(dcel_);
 
+            current_point_.reset();
+            normal_point_.reset();
+            current_line_.reset();
 
-            Kirkpatrick* T = new Kirkpatrick(d);
-            picked_ = point_2(0.0, 0.0);
-            Triangle * t = T->localize(picked_.get());
-            triangle_ = t;
-            return true;
-        }
-        if(key_code == Qt::Key_C) // copy
-        {
+            level_ = 0;
             LinkedTriangleDcel* d = reinterpret_cast<LinkedTriangleDcel*>(dcel_);
-            LinkedTriangleDcel* copy = new LinkedTriangleDcel(*d);
-            old_ = dcel_;
-            dcel_ = copy;
-            return true;
-        }
-        if(key_code == Qt::Key_S) // swap
-        {
-            std::swap(old_, dcel_);
-            return true;
-        }
-        if(key_code == Qt::Key_F) // swap
-        {
-            LinkedTriangleDcel* d = reinterpret_cast<LinkedTriangleDcel*>(dcel_);
-            d->triangulateDcel();
-            d->checkConsistensy("triangulation");
-            d->triangleCheck();
-            std::cout<<"dcel triangulated"<<endl;
+            T_ = new Kirkpatrick(d);
             return true;
         }
 
+//        if(key_code == Qt::Key_D) // delete
+//        {
+//            LinkedTriangleDcel* d = reinterpret_cast<LinkedTriangleDcel*>(dcel_);
+//            d->deleteVertex(d->vertices.back());
+//            std::cout<<"vertex deleted"<<endl;
+//            d->checkConsistensy("deletion");
+//            return true;
+//        }
+
+//        if(key_code == Qt::Key_K) // kirkpatrick
+//        {
+//            LinkedTriangleDcel* d = reinterpret_cast<LinkedTriangleDcel*>(dcel_);
+
+
+//            Kirkpatrick* T = new Kirkpatrick(d);
+//            picked_ = point_2(0.0, 0.0);
+//            Triangle * t = T->localize(picked_.get());
+//            triangle_ = t;
+//            return true;
+//        }
+//        if(key_code == Qt::Key_C) // copy
+//        {
+//            LinkedTriangleDcel* d = reinterpret_cast<LinkedTriangleDcel*>(dcel_);
+//            LinkedTriangleDcel* copy = new LinkedTriangleDcel(*d);
+//            old_ = dcel_;
+//            dcel_ = copy;
+//            return true;
+//        }
+//        if(key_code == Qt::Key_S) // swap
+//        {
+//            std::swap(old_, dcel_);
+//            return true;
+//        }
+//        if(key_code == Qt::Key_F) // swap
+//        {
+//            LinkedTriangleDcel* d = reinterpret_cast<LinkedTriangleDcel*>(dcel_);
+//            d->triangulateDcel();
+//            d->checkConsistensy("triangulation");
+//            d->triangleCheck();
+//            std::cout<<"dcel triangulated"<<endl;
+//            return true;
+//        }
+
+        if(key_code == Qt::Key_Left) //decrease level
+        {
+            if(level_==0)
+                return false;
+            level_--;
+            dcel_=T_->getLevel(level_);
+            return true;
+        }
+
+        if(key_code == Qt::Key_Right) //increase level
+        {
+            if(level_ == T_->getMaxLevel())
+                return false;
+            level_++;
+            dcel_=T_->getLevel(level_);
+            return true;
+        }
 
         return false;
     }
 
 
     Dcel* dcel_;
-    Dcel* old_;
+    Kirkpatrick* T_;
+    int level_;
+
 private:
     std::vector<Line> lines_;
 
@@ -244,13 +275,12 @@ private:
     boost::optional<point_2f> current_point_;
     boost::optional<point_2f> normal_point_;
     boost::optional<Line> current_line_;
-    boost::optional<Triangle*> triangle_;
 
-    std::vector<pair<point_2, point_2> > actual_face_; // vector of segments
+    boost::optional<Triangle*> triangle_; // ???
+
+    std::vector<pair<point_2, point_2> > actual_face_; // vector of segments - localization of a point
 
     bool localization_mode_ = false;
-    //vector<point_2> old_points_;
-
 };
 
 int main(int argc, char ** argv)

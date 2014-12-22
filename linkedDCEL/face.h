@@ -1,7 +1,6 @@
 #ifndef FACE_H
 #define FACE_H
 
-
 #include<vector>
 using std::vector;
 
@@ -9,6 +8,7 @@ using std::vector;
 #include "vertex.h"
 #include "triangle.h"
 
+using std::pair;
 
 struct Edge;
 struct Vertex;
@@ -29,6 +29,7 @@ struct Face
 
     vector<Vertex*> getVertices();
     Edge* getStrongEdge();
+    vector<pair<point_2, point_2> > getEdgesToDraw();
 
 //    bool contains(point_2 p)
 //    {

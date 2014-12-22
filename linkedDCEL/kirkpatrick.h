@@ -10,14 +10,21 @@ using std::map;
 
 struct Kirkpatrick
 {
-//    vector<LinkedTriangleDcel*> lauers_d;
+    vector<LinkedTriangleDcel*> levels;
+
     vector<vector<Triangle*> >  lauers;
     Triangle* root;
 
     int countPower(Vertex* v)
     {
-        //todo
-        return 0;
+        int counter = 0;
+        Edge* cur = v->incidentEdge;
+        do
+        {
+            ++counter;
+            cur = cur->twin->next;
+        }while(cur!=v->incidentEdge);
+        return counter;
     }
 
     vector<Triangle*> getAllTriangles(Vertex* v)
@@ -38,16 +45,20 @@ struct Kirkpatrick
     Kirkpatrick(LinkedTriangleDcel* dcel)
     {
         dcel->triangulateDcel();
-        lauers.push_back({}); // создали нулевой слой
+        levels.push_back(dcel);
 
-        for(int i=1; i<dcel->faces.size(); ++i)      // перебрать все фейсы.
+        lauers.push_back({}); // the 0-th lauer created
+
+        for(int i=1; i<dcel->faces.size(); ++i)      // add all triangles to lauer 0
         {
             Triangle* triangle = dcel->faces[i]->triangle;
             lauers[0].push_back(triangle);
         }
 
-        // now the main part: removing vertices and construction
 
+        dcel = new LinkedTriangleDcel(*dcel); // make a copy
+
+        // now the main part: removing vertices and construction
         while(true)
         {
             if(dcel->vertices.size()==3)
@@ -56,7 +67,7 @@ struct Kirkpatrick
             map<Vertex*, bool> used;
             vector<Vertex*> victims;
 
-            for(int i=3; i<dcel->vertices.size(); ++i)  // найдем жертв
+            for(int i=3; i<dcel->vertices.size(); ++i)  // find victims
             {
                 bool flag = true;
                 Vertex* vert = dcel->vertices[i];
@@ -81,17 +92,19 @@ struct Kirkpatrick
                 }
             }
 
-            for(int i=0; i<victims.size(); ++i)   // удалим по одной и пролинкуем
+            for(int i=0; i<victims.size(); ++i)   // delete victims one-by-one and link appropriate triangles
             {
-                // старые вокруг жертвы
+                // old triangles arount the victim
                 vector<Triangle*> oldTriangles = getAllTriangles(victims[i]);
 
-                //удалим жертву и триангулируем фигуру. получим новые треугольники
+                // delete the victim
                 Face* bigFace = dcel->deleteVertex(victims[i]);
+
+                // get new triangles after triangulation
                 vector<Triangle*> newTriangles = dcel->triangulateFace(bigFace);
 
 
-                //теперь надо попересекать их
+                // intersect old and new triangles
                 for(int j=0; j<newTriangles.size(); ++j)
                 {
                     for(int k=0; k<oldTriangles.size(); ++k)
@@ -102,24 +115,27 @@ struct Kirkpatrick
                 }
             }
 
-            //теперь надо запушать все в следующий уровень
+            // push triangles to the next level
             lauers.push_back({});
-            for(int i=1; i<dcel->faces.size(); ++i)      // перебрать все фейсы.
+
+            // traverse all faces and add triangles, wich already have successors-links
+            for(int i=1; i<dcel->faces.size(); ++i)
             {
                 Triangle* triangle = dcel->faces[i]->triangle;
-                // у triangle уже натянуты линки на нижний уровень
-
                 lauers[lauers.size()-1].push_back(triangle);
             }
+
+            levels.push_back(dcel);
+            dcel = new LinkedTriangleDcel(*dcel); // make a copy
         }
 
         root = dcel->faces[1]->triangle;
     }
 
-    Triangle* localize(point_2 p)
+    Face* localize(point_2 p)
     {
         if(! root->contains(p))
-            return lauers.back()[0];
+            return levels[0]->outer_face;
         else
         {
             Triangle* u = root;
@@ -134,8 +150,20 @@ struct Kirkpatrick
                     }
                 }
             }
-            return u;
+            return u->e->incidentFace;
         }
+    }
+
+    LinkedTriangleDcel* getLevel(int l)
+    {
+        if(l >= levels.size() || l < 0)
+            return NULL;  // impossible but let it be
+        else
+            return levels[l];
+    }
+    int getMaxLevel()
+    {
+        return levels.size()-1;
     }
 
 };
