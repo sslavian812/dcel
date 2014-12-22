@@ -110,10 +110,15 @@ bool LinkedTriangleDcel::checkConsistensy(string s)
 
     for(int i=0; i<vertices.size(); ++i)
     {
-        if(vertices[i]->incidentEdge == NULL ||
-                std::find(edges.begin(), edges.end(), vertices[i]->incidentEdge) == edges.end())
+        if(vertices[i]->incidentEdge == NULL)
+        {
+            std::cerr<<"warning: vertices["<<i<<"]->incidentEdge is NULL"<<std::endl;
+            res = false;
+        }
+        else if(std::find(edges.begin(), edges.end(), vertices[i]->incidentEdge) == edges.end())
         {
             std::cerr<<"warning: vertices["<<i<<"]->incidentEdge doesn't present"<<std::endl;
+            res = false;
         }
     }
 

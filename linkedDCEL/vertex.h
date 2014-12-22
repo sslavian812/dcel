@@ -23,24 +23,27 @@ struct Vertex
     Line* line2;
     Edge* incidentEdge;
 
-    bool isOnBorder;
 
-    Vertex(point_2 point): point(point), incidentEdge(NULL), isOnBorder(false)
+    Vertex(const Vertex & other): point(other.point), line1(other.line1),
+        line2(other.line2), incidentEdge(other.incidentEdge)
     {}
 
-    Vertex(double x, double y): point(point_2(x,y)), incidentEdge(NULL), isOnBorder(false)
+    Vertex(point_2 point): point(point), incidentEdge(NULL)
     {}
 
-    Vertex(Line* l1, Line* l2, point_2 point, Edge* edge = NULL): line1(l1), line2(l2), point(point), incidentEdge(edge), isOnBorder(false)
+    Vertex(double x, double y): point(point_2(x,y)), incidentEdge(NULL)
     {}
 
-    Vertex(Line* l1, Line* l2, Edge* edge = NULL): line1(l1), line2(l2), incidentEdge(edge), isOnBorder(false)
+    Vertex(Line* l1, Line* l2, point_2 point, Edge* edge = NULL): line1(l1), line2(l2), point(point), incidentEdge(edge)
+    {}
+
+    Vertex(Line* l1, Line* l2, Edge* edge = NULL): line1(l1), line2(l2), incidentEdge(edge)
     {point = l1->intersect(*l2);}
 
-    Vertex(double x, double y, Edge* edge): point(point_2(x,y)), incidentEdge(edge), isOnBorder(false)
+    Vertex(double x, double y, Edge* edge): point(point_2(x,y)), incidentEdge(edge)
     {}
 
-    Vertex(Line* l1, Line* l2, double x, double y, Edge* edge = NULL): line1(l1), line2(l2), incidentEdge(edge), isOnBorder(false)
+    Vertex(Line* l1, Line* l2, double x, double y, Edge* edge = NULL): line1(l1), line2(l2), incidentEdge(edge)
     {point = point_2(x,y);}
 
 
@@ -98,8 +101,6 @@ struct Vertex
         else
             return false;
     }
-
-
 
     static bool leftTurn(Vertex* v1, Vertex* v2, point_2 p)
     {

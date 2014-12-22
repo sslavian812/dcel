@@ -190,23 +190,42 @@ struct sample_viewer : cg::visualization::viewer_adapter
         if(key_code == Qt::Key_D) // delete
         {
             LinkedTriangleDcel* d = reinterpret_cast<LinkedTriangleDcel*>(dcel_);
-            d->deleteVertex(d->vertices[3]);
+            d->deleteVertex(d->vertices.back());
             std::cout<<"vertex deleted"<<endl;
             d->checkConsistensy("deletion");
             return true;
         }
-        if(key_code == Qt::Key_C) // new feature
+        if(key_code == Qt::Key_K) // kirkpatrick
         {
             LinkedTriangleDcel* d = reinterpret_cast<LinkedTriangleDcel*>(dcel_);
-//            d->triangulateDcel();
-//            d->checkConsistensy("triangulation");
-//            d->triangleCheck();
-//            std::cout<<"dcel triangulated"<<endl;
+
 
             Kirkpatrick* T = new Kirkpatrick(d);
             picked_ = point_2(0.0, 0.0);
             Triangle * t = T->localize(picked_.get());
             triangle_ = t;
+            return true;
+        }
+        if(key_code == Qt::Key_C) // copy
+        {
+            LinkedTriangleDcel* d = reinterpret_cast<LinkedTriangleDcel*>(dcel_);
+            LinkedTriangleDcel* copy = new LinkedTriangleDcel(*d);
+            old_ = dcel_;
+            dcel_ = copy;
+            return true;
+        }
+        if(key_code == Qt::Key_S) // swap
+        {
+            std::swap(old_, dcel_);
+            return true;
+        }
+        if(key_code == Qt::Key_F) // swap
+        {
+            LinkedTriangleDcel* d = reinterpret_cast<LinkedTriangleDcel*>(dcel_);
+            d->triangulateDcel();
+            d->checkConsistensy("triangulation");
+            d->triangleCheck();
+            std::cout<<"dcel triangulated"<<endl;
             return true;
         }
 
@@ -216,6 +235,7 @@ struct sample_viewer : cg::visualization::viewer_adapter
 
 
     Dcel* dcel_;
+    Dcel* old_;
 private:
     std::vector<Line> lines_;
 

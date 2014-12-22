@@ -140,30 +140,59 @@ struct LinkedTriangleDcel : Dcel
         {delete faces[i];}
     }
 
-    LinkedTriangleDcel( const LinkedTriangleDcel& other )
+    LinkedTriangleDcel( const LinkedTriangleDcel& other)
     {
-        // creation copies of all lines adges, vertices and faces;
-        // feature: let's construct new dcel from (l0, l2, l4)
-        // and add all even lines l6, l8...  to it. so that dcel will de copied automatically
-        Line l0 = *(other.lines[0]);
-        Line l2 = *(other.lines[2]);
-        Line l4 = *(other.lines[4]);
-        LinkedTriangleDcel t = LinkedTriangleDcel(l0,l2, l4);
-        for(int i=6; i<other.lines.size(); i+=2)
+        map<void*, void*> m;
+
+        for(int i=0; i<other.lines.size(); ++i)
+            lines.push_back(other.lines[i]);
+
+
+        for(int i=0; i<other.faces.size(); ++i)
         {
-            Line l = *(other.lines[i]);
-            t.addLine(l.a, l.b, l.c);
+            Face* f = new Face(*(other.faces[i]));
+            faces.push_back(f);
+            m[other.faces[i]]=f;
         }
-        // swap all the fields:
-        std::swap(this->lines        , t.lines);
-        std::swap(this->edges        , t.edges);
-        std::swap(this->vertices     , t.vertices);
-        std::swap(this->outer_face   , t.outer_face);
-        std::swap(this->faces        , t.faces);
-        std::swap(this->start_pool[0], t.start_pool[0]);
-        std::swap(this->start_pool[1], t.start_pool[1]);
-        std::swap(this->start_pool[2], t.start_pool[2]);
-        std::swap(this->start_pool[3], t.start_pool[3]);
+
+        for(int i=0; i<other.edges.size(); ++i)
+        {
+            Edge* e = new Edge(*(other.edges[i]));
+            edges.push_back(e);
+            m[other.edges[i]]=e;
+        }
+        for(int i=0; i<other.vertices.size(); ++i)
+        {
+            Vertex* v = new Vertex(*(other.vertices[i]));
+            vertices.push_back(v);
+            m[other.vertices[i]]=v;
+        }
+
+        for(int i=0; i<faces.size(); ++i)
+        {
+            Face* f = faces[i];
+            f->startEdge = (Edge*)m[f->startEdge];
+        }
+        for(int i=0; i<edges.size(); ++i)
+        {
+            Edge* e = edges[i];
+            e->origin = (Vertex*)m[e->origin];
+            e->incidentFace = (Face*)m[e->incidentFace];
+            e->next = (Edge*)m[e->next];
+            e->prev = (Edge*)m[e->prev];
+            e->twin = (Edge*)m[e->twin];
+        }
+        for(int i=0; i<vertices.size(); ++i)
+        {
+            Vertex* v = vertices[i];
+            v->incidentEdge = (Edge*)m[v->incidentEdge];
+        }
+
+        outer_face = faces[0];
+        start_pool[0] = (Edge*)m[start_pool[0]];
+        start_pool[1] = (Edge*)m[start_pool[1]];
+        start_pool[2] = (Edge*)m[start_pool[2]];
+        start_pool[3] = (Edge*)m[start_pool[3]];
 
         this->checkConsistensy("copy constructor");
     }
@@ -595,7 +624,7 @@ struct LinkedTriangleDcel : Dcel
         {
             //remove
             edges.erase(std::remove(edges.begin(), edges.end(), to_clear_edges[i]), edges.end());
-//leek!            delete to_clear_edges[i];
+            //leek!     delete to_clear_edges[i];
         }
 
         vector<Face*> to_clear_faces;
@@ -620,14 +649,13 @@ struct LinkedTriangleDcel : Dcel
         {
             //remove
             faces.erase(std::remove(faces.begin(), faces.end(), to_clear_faces[i]), faces.end());
-//leek!            delete to_clear_faces[i];
+            //leek!  delete to_clear_faces[i];
         }
 
         //remove
         vertices.erase(std::remove(vertices.begin(), vertices.end(), v), vertices.end());
-//leek!        delete v;
+        //leek!    delete v;
         return face;
-        //return checkConsistensy("vertex deleted");
     }
 
 

@@ -24,6 +24,9 @@ struct Face
     Face(Edge* edge): startEdge(edge), triangle(NULL)
     {}
 
+    Face(const Face & other): startEdge(other.startEdge), triangle(NULL)
+    {}
+
     vector<Vertex*> getVertices();
     Edge* getStrongEdge();
 
