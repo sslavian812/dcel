@@ -67,7 +67,6 @@ Face* LinkedTriangleDcel::addEdge(Vertex* from, Vertex* to, Face* bigface)
     return smallface;
 }
 
-// отдает вектор фейсов-треугольников
 vector<Triangle*> LinkedTriangleDcel::triangulateFace(Face* face)
 {
     vector<Face*> fs;
@@ -95,7 +94,7 @@ vector<Triangle*> LinkedTriangleDcel::triangulateFace(Face* face)
             {
                 border.erase(it2);
                 border_size--;
-                fs.push_back(addEdge(v1, v3, face)); // отдает новый фейс
+                fs.push_back(addEdge(v1, v3, face)); // gives new face
                 continue;
             }
         }
@@ -113,7 +112,6 @@ vector<Triangle*> LinkedTriangleDcel::triangulateFace(Face* face)
         res.push_back(fs[i]->triangle);
     }
 
-    // are strongEdges even strong?
     return res;
 }
 

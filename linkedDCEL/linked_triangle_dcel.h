@@ -658,8 +658,6 @@ struct LinkedTriangleDcel : Dcel
         return face;
     }
 
-
-    // отдает вектор фейсов-треугольников
     vector<Triangle*> triangulateFace(Face* face);
     void triangulateDcel();
 

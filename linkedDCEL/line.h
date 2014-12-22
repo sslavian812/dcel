@@ -86,21 +86,6 @@ struct Line
         return std::make_pair(point_2f((float)x0,(float)y0), point_2f((float)x1,(float)y1));
     }
 
-//    bool operator<(const Line &other) const
-//    {
-//        return atan2(n.y, n.x) < atan2(other.n.y, other.n.x);
-//    }
-
-//    bool operator>(const Line &other) const
-//    {
-//        return other.operator <(*this);
-//    }
-
-//    bool operator==(const Line &other) const
-//    {
-//        return (!(*this<other)) && (!(other<*this));
-//    }
-
     bool operator==(const Line & other)
     {
         double eps = 0.000001;

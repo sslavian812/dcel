@@ -11,7 +11,6 @@ using std::map;
 struct Kirkpatrick
 {
     vector<LinkedTriangleDcel*> levels;
-
     vector<vector<Triangle*> >  lauers;
     Triangle* root;
 
@@ -146,7 +145,7 @@ struct Kirkpatrick
                 {
                     if(u->successors[i]->contains(p))
                     {
-                        u=u->successors[i];
+                        u = u->successors[i];
                         break;
                     }
                 }

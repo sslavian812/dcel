@@ -192,6 +192,7 @@ struct sample_viewer : cg::visualization::viewer_adapter
 
         if(key_code == Qt::Key_Left) //decrease level
         {
+            actual_face_.resize(0);
             if(level_==0)
                 return false;
             level_--;
@@ -201,6 +202,7 @@ struct sample_viewer : cg::visualization::viewer_adapter
 
         if(key_code == Qt::Key_Right) //increase level
         {
+            actual_face_.resize(0);
             if(level_ == T_->getMaxLevel())
                 return false;
             level_++;

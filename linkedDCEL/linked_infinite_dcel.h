@@ -291,7 +291,7 @@ struct LinkedInfiniteDcel : Dcel
             return next_edge;
         }
 
-        return NULL; // sometimes reachable, but I don't know why
+        return NULL;
     }
 
 
@@ -653,8 +653,6 @@ struct LinkedInfiniteDcel : Dcel
             cerr<<"ended checking face "<<f<<": "<<endl<<endl;
         return res;
     }
-
-
     bool checkConsistensy()
     {
         bool res = true;
@@ -672,47 +670,5 @@ struct LinkedInfiniteDcel : Dcel
             std::cerr<<"dcel is INCORRECT!"<<std::endl;
         return res;
     }
-
-//    list<int> cunstructBorder(int face)
-//    {
-//        int cur_edge = faces[face].startEdge;
-//        int start_edge = cur_edge;
-//        list<int> l;
-//        do
-//        {
-//            l.insert(l.end(),edges[cur_edge].origin);
-//            cur_edge = edges[cur_edge].next;
-//        }while(cur_edge != start_edge);
-//        return l;
-//    }
-
-//    void triangulate(int face)
-//    {
-//        list<int> dcvl = constructBorder(face);
-//        list<int>::iterator it=dcvl.begin();
-//        list<int>::iterator it2;
-//        list<int>::iterator it3;
-//        while(dcvl.size() > 3)
-//        {
-//            it2 = it;
-//            int v1,v2,v3;
-//            v1 = *it2; ++it2;
-//            if(it2 == dcvl.end()) it2=dcvl.begin();
-//            it3=it2;
-//            v2 = *it3; ++it3;
-//            if(it3 == dcvl.end()) it3=dcvl.begin();
-//            v3 = *it3;
-
-//            if(leftTurn(v1,v2,v3))
-//            {
-//                if(isEar(dcvl, v1,v2,v3))
-//                {
-//                    curEar(dcvl, it1, it2, it3);
-//                }
-//            }
-//        }
-
-
-//    }
 };
 
