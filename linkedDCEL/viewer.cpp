@@ -172,6 +172,9 @@ struct sample_viewer : cg::visualization::viewer_adapter
         }
         if(key_code == Qt::Key_I) // invalidate
         {
+            delete T_;
+            localization_mode_ = false;
+            picked_.reset();
             dcel_ = new LinkedInfiniteDcel();
             lines_.resize(0);
             return true;

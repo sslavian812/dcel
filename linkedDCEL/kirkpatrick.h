@@ -13,6 +13,7 @@ struct Kirkpatrick
     vector<LinkedTriangleDcel*> levels;
     vector<vector<Triangle*> >  lauers;
     Triangle* root;
+    LinkedTriangleDcel* init;
 
     int countPower(Vertex* v)
     {
@@ -43,7 +44,33 @@ struct Kirkpatrick
 
     Kirkpatrick(LinkedTriangleDcel* dcel)
     {
+        init = dcel;
+        dcel = new LinkedTriangleDcel(*dcel); // make a copy
+
+        // надо сделать так, чтобы каждое ребро из копии знало грань их копии(init'а)
+
+        map<Edge*, Face*> m;
+        for(int i=1; i<init->faces.size(); ++i)
+        {
+            Face* oldface = init->faces[i];
+            Face* newFace = dcel->faces[i];
+
+            Edge* cur = newFace->startEdge;
+            do
+            {
+                m[cur] = oldface;
+                cur = cur->next;
+            }while(cur!=newFace->startEdge);
+        }
+
         dcel->triangulateDcel();
+
+        for(int i=1; i<dcel->faces.size(); ++i)
+        {
+            Face* f = dcel->faces[i];
+            f->triangle->e = m[f->triangle->e]->startEdge;
+        }
+
         levels.push_back(dcel);
 
         lauers.push_back({}); // the 0-th lauer created
